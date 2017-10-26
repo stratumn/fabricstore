@@ -1,0 +1,1 @@
+docker-compose -f $GOPATH/src/github.com/stratumn/fabricstore/integration/docker-compose.yml up --force-recreate
