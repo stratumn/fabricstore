@@ -5,3 +5,5 @@ rm -rf $GOPATH/src/github.com/stratumn/fabricstore/cmd/msp
 rm -rf $GOPATH/src/github.com/stratumn/fabricstore/cmd/keystore
 rm -rf $GOPATH/src/github.com/stratumn/fabricstore/store/msp
 rm -rf $GOPATH/src/github.com/stratumn/fabricstore/store/keystore
+rm -rf $GOPATH/src/github.com/stratumn/fabricstore/chaincode/hyperledger
+rm -rf $GOPATH/src/github.com/stratumn/fabricstore/chaincode/stratumn

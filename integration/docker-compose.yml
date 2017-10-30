@@ -17,7 +17,7 @@ version: '2'
 services:
   orderer.example.com:
     container_name: orderer.example.com
-    image: hyperledger/fabric-orderer
+    image: hyperledger/fabric-orderer:x86_64-1.0.3
     environment:
       # logging
       - ORDERER_GENERAL_LOGLEVEL=warn
@@ -78,7 +78,7 @@ services:
 
   couchdb0:
     container_name: couchdb0
-    image: hyperledger/fabric-couchdb
+    image: hyperledger/fabric-couchdb:x86_64-1.0.3
     environment:
       - COUCHDB_USER=
       - COUCHDB_PASSWORD=
@@ -87,7 +87,7 @@ services:
   
   cli:
     container_name: cli
-    image: hyperledger/fabric-tools
+    image: hyperledger/fabric-tools:x86_64-1.0.3
     tty: true
     environment:
       - GOPATH=/opt/gopath
