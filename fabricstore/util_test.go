@@ -239,14 +239,22 @@ func StopNetwork() error {
 		RemoveVolume:  true,
 		RemoveOrphans: true,
 	})
+	if err != nil {
+		return err
+	}
 
-	// clean
+	// Clean
+	err = CleanUp()
+	if err != nil {
+		return err
+	}
+
 	os.RemoveAll("keystore")
 	os.RemoveAll("msp")
 	os.RemoveAll("./../chaincode/hyperledger")
 	os.RemoveAll("./../chaincode/stratumn")
 
-	return err
+	return nil
 }
 
 // ListenNetwork checks if network was launched successfully
@@ -277,4 +285,47 @@ func ListentNetwork(status chan<- bool) error {
 			}
 		}
 	}
+}
+
+func CleanUp() error {
+	endpoint := "unix:///var/run/docker.sock"
+
+	client, err := dockerclient.NewClient(endpoint)
+	if err != nil {
+		return err
+	}
+
+	containers, err := client.ListContainers(
+		dockerclient.ListContainersOptions{All: true},
+	)
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		err = client.RemoveContainer(dockerclient.RemoveContainerOptions{
+			ID: container.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	imgs, err := client.ListImages(
+		dockerclient.ListImagesOptions{
+			Filter: "*peer0.org1.example.com-pop*",
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	for _, img := range imgs {
+		err = client.RemoveImage(img.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

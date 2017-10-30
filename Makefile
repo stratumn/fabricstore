@@ -30,7 +30,7 @@ GITHUB_RELEASE_FLAGS=--user '$(GITHUB_USER)' --repo '$(GITHUB_REPO)' --tag '$(GI
 GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --description "$$(cat $(RELEASE_NOTES_FILE))"
 
 GO_LIST=$(GO_CMD) list
-GO_BUILD=$(GO_CMD) build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X github.com/stratumn/sdk/strat/cmd.DefaultGeneratorsRef=$(GENERATOR_VERSION)'
+GO_BUILD=$(GO_CMD) build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-extldflags "-static" -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X github.com/stratumn/sdk/strat/cmd.DefaultGeneratorsRef=$(GENERATOR_VERSION)'
 GO_TEST=$(GO_CMD) test
 GO_BENCHMARK=$(GO_TEST) -bench .
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
@@ -93,14 +93,13 @@ $(COVERAGE_FILE): $(COVERAGE_SOURCES)
 coverhtml:
 	echo 'mode: set' > $(COVERHTML_FILE)
 	@for d in $(TEST_PACKAGES); do \
-	    $(GO_TEST) -coverprofile=profile.out $$d || exit 1; \
+	    $(GO_TEST) -coverprofile=profile.out $$d -integration || exit 1; \
 	    if [ -f profile.out ]; then \
 	        tail -n +2 profile.out >> $(COVERHTML_FILE); \
 	        rm profile.out; \
 	    fi \
 	done
 	$(GO_CMD) tool cover -html $(COVERHTML_FILE)
-
 
 # == benchmark ================================================================
 benchmark: $(BENCHMARK_LIST)

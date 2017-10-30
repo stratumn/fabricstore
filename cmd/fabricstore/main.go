@@ -26,9 +26,9 @@ import (
 )
 
 var (
-	channelID   = flag.String("channelID", "mychannel", "channelID")
-	chaincodeID = flag.String("chaincodeID", "pop", "chaincodeID")
-	configFile  = flag.String("configFile", os.Getenv("GOPATH")+"/src/github.com/stratumn/fabricstore/integration/client-config/client-config.yaml", "Absolute path to network config file")
+	channelID   = flag.String("channelID", os.Getenv("CHANNEL_ID"), "channelID")
+	chaincodeID = flag.String("chaincodeID", os.Getenv("CHAINCODE_ID"), "chaincodeID")
+	configFile  = flag.String("configFile", os.Getenv("CLIENT_CONFIG_PATH"), "Absolute path to network config file")
 	version     = "0.1.0"
 	commit      = "00000000000000000000000000000000"
 )

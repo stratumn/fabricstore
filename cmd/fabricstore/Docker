@@ -1,1 +1,9 @@
+USER root
+
+RUN mkdir -p /var/stratumn/fabricstore
+RUN chown stratumn:stratumn /var/stratumn/fabricstore
+
+USER stratumn
+
+VOLUME /var/stratumn/fabricstore
 EXPOSE 5000
