@@ -16,7 +16,7 @@ func New(TransactionID string, timestamp uint64) (*cs.Evidence, error) {
 	return &cs.Evidence{
 		State:    cs.CompleteEvidence,
 		Backend:  ProofBackend,
-		Provider: "dummy",
+		Provider: ProofBackend,
 		Proof: &FabricProof{
 			Timestamp:     timestamp,
 			TransactionID: TransactionID,
