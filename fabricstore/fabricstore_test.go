@@ -25,6 +25,8 @@ import (
 	"github.com/stratumn/sdk/cs/cstesting"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
+
+	_ "github.com/stratumn/fabricstore/evidence"
 )
 
 var (

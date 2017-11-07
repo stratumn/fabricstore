@@ -90,13 +90,10 @@ func TestPop_SaveSegment(t *testing.T) {
 	saveSegment(t, stub, segment)
 
 	payload := checkQuery(t, stub, [][]byte{[]byte("GetSegment"), []byte(segment.GetLinkHashString())})
+	savedSegment := &cs.Segment{}
+	json.Unmarshal(payload, savedSegment)
 
-	segment.SetEvidence(
-		map[string]interface{}{
-			"state":        cs.PendingEvidence,
-			"transactions": map[string]string{"transactionID": "1"},
-		})
-
+	segment.Meta.Evidences = savedSegment.Meta.Evidences
 	segmentBytes, _ := json.Marshal(segment)
 
 	if string(segmentBytes) != string(payload) {
