@@ -246,9 +246,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/stratumn/sdk"
   packages = ["bufferedbatch","cs","cs/cstesting","jsonhttp","jsonws","store","store/storehttp","testutil","types"]
-  revision = "2a77ea91a4cc3e95bd6d743c9ab27070ee83b9b7"
+  revision = "406c35b339ed1f5c6119d60fbbb74370964d0816"
 
 [[projects]]
   branch = "master"
@@ -324,6 +325,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2417e5d8aa57e41bc5242019d0928672aab2289a46085b44ebe7ff65008a173f"
+  inputs-digest = "d58001ed608fa3e6cbbd3a5a4b7d310520fb572245a71bc2dccd4ea8772ba7d3"
   solver-name = "gps-cdcl"
   solver-version = 1

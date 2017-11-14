@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/stratumn/fabricstore/evidence"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 
@@ -234,12 +236,11 @@ func (s *SmartContract) SaveSegment(stub shim.ChaincodeStubInterface, args []str
 	if err := segment.Validate(); err != nil {
 		return shim.Error(err.Error())
 	}
-	// Set pending evidence
-	segment.SetEvidence(
-		map[string]interface{}{
-			"state":        cs.PendingEvidence,
-			"transactions": map[string]string{"transactionID": stub.GetTxID()},
-		})
+
+	// Add fabric evidence
+	if err := addEvidence(segment, stub); err != nil {
+		return shim.Error(err.Error())
+	}
 
 	// Check has prevLinkHash if not create map else check prevLinkHash exists
 	prevLinkHash := segment.Link.GetPrevLinkHashString()
@@ -429,6 +430,24 @@ func extractSegment(segmentDocBytes []byte) ([]byte, error) {
 func getValueCompositeKey(key string, stub shim.ChaincodeStubInterface) (compositeKey string, err error) {
 	compositeKey, err = stub.CreateCompositeKey(ObjectTypeValue, []string{key})
 	return
+}
+
+func addEvidence(segment *cs.Segment, stub shim.ChaincodeStubInterface) error {
+	timestamp, err := stub.GetTxTimestamp()
+	if err != nil {
+		return err
+	}
+
+	transactionID := stub.GetTxID()
+
+	ev, err := evidence.New(transactionID, uint64(timestamp.Seconds))
+	if err != nil {
+		return err
+	}
+
+	segment.Meta.Evidences = append(segment.Meta.Evidences, ev)
+
+	return nil
 }
 
 // main function starts up the chaincode in the container during instantiate
