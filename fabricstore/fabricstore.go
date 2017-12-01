@@ -19,12 +19,17 @@ package fabricstore
 import (
 	"encoding/json"
 
+	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
+	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,7 +60,18 @@ type Config struct {
 
 // FabricStore is the type that implements github.com/stratumn/sdk/store.Adapter.
 type FabricStore struct {
-	fabricClient    apitxn.ChannelClient
+	session      *fabapi.Session
+	fabricClient apitxn.ChannelClient
+
+	// channelClient is used to send transaction proposals.
+	channelClient apitxn.ChannelClient
+
+	// peerClient is the client connection to the peer.
+	peerClient fab.FabricClient
+
+	// eventHub is used to listen for new block events
+	eventHub fab.EventHub
+
 	didSaveChans    []chan *cs.Segment
 	fabricEventChan chan *apitxn.CCEvent
 	config          *Config
@@ -86,10 +102,39 @@ func New(config *Config) (*FabricStore, error) {
 		return nil, err
 	}
 
+	client, err := sdk.ConfigProvider().Client()
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := sdk.NewPreEnrolledUserSession(client.Organization, "Admin")
+	if err != nil {
+		return nil, err
+	}
+
+	peerClient, err := sdk.NewSystemClient(session)
+	if err != nil {
+		return nil, err
+	}
+
+	eventHub, err := getEventHub(peerClient)
+	if err != nil {
+		return nil, err
+	}
+
 	adapter := &FabricStore{
 		fabricClient:    chClient,
+		channelClient:   chClient,
+		session:         session,
+		peerClient:      peerClient,
+		eventHub:        eventHub,
 		config:          config,
 		fabricEventChan: make(chan *apitxn.CCEvent, 256),
+	}
+
+	// Listen to block events
+	if err := adapter.listenToBlockEvents(); err != nil {
+		return nil, err
 	}
 
 	// Register to saveSegment events
@@ -282,4 +327,52 @@ func (f *FabricStore) DeleteValue(key []byte) (value []byte, err error) {
 	})
 
 	return
+}
+
+func (f *FabricStore) listenToBlockEvents() error {
+	if err := f.eventHub.Connect(); err != nil {
+		return err
+	}
+
+	f.eventHub.RegisterBlockEvent(f.onBlock)
+	return nil
+}
+
+// onBlock is the callback function called on block events.
+func (f *FabricStore) onBlock(block *common.Block) {
+	log.Infof("Received block")
+	// if err := decodeBlock(block); err != nil {
+	// 	t.Logf(err.Error())
+	// 	t.FailNow()
+	// }
+}
+
+func getEventHub(client fab.FabricClient) (fab.EventHub, error) {
+	eventHub, err := events.NewEventHub(client)
+	if err != nil {
+		return nil, err
+	}
+	foundEventHub := false
+	peerConfig, err := client.Config().PeersConfig("Org1")
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range peerConfig {
+		if p.URL != "" {
+			log.Infof("EventHub connect to peer (%s)", p.URL)
+			serverHostOverride := ""
+			if str, ok := p.GRPCOptions["ssl-target-name-override"].(string); ok {
+				serverHostOverride = str
+			}
+			eventHub.SetPeerAddr(p.EventURL, p.TLSCACerts.Path, serverHostOverride)
+			foundEventHub = true
+			break
+		}
+	}
+
+	if !foundEventHub {
+		return nil, err
+	}
+
+	return eventHub, nil
 }
