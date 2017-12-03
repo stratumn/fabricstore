@@ -2,7 +2,6 @@ package fabricstore
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
@@ -19,6 +18,15 @@ import (
 
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
+
+// Transaction is used when reading blocks
+type Transaction struct {
+	ChannelID     string `json:"channelID"`
+	ChaincodeID   string `json:"chaincodeID"`
+	TransactionID string `json:"transactionID"`
+	Action        string `json:"action"`
+	Args          [][]byte
+}
 
 func getChannel(client fab.FabricClient, channelID string, orgName string) (fab.Channel, error) {
 	channel, err := client.NewChannel(channelID)
@@ -117,24 +125,20 @@ func getEventHub(client fab.FabricClient) (fab.EventHub, error) {
 	return eventHub, nil
 }
 
-func readBlock(block *common.Block) error {
+func readBlock(block *common.Block) ([]*Transaction, error) {
+	transactions := []*Transaction{}
 	txFilter := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	for i, txBytes := range block.Data.Data {
 		if txFilter.Flag(i) == pb.TxValidationCode_VALID {
-			cc, err := getChaincodeEvent(txBytes)
+			tx, err := getChaincodeEvent(txBytes)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			if cc != nil {
-				fmt.Println(cc.ChaincodeId)
-				fmt.Println(cc.EventName)
-				fmt.Println(cc.TxId)
-				fmt.Println(string(cc.Payload))
-			}
+			transactions = append(transactions, tx)
 		}
 	}
 
-	return nil
+	return transactions, nil
 }
 
 func getTxPayload(txData []byte) (*com.Payload, error) {
@@ -155,7 +159,7 @@ func getTxPayload(txData []byte) (*com.Payload, error) {
 	return nil, nil
 }
 
-func getChaincodeEvent(txData []byte) (*pb.ChaincodeEvent, error) {
+func getChaincodeEvent(txData []byte) (*Transaction, error) {
 	payload, err := getTxPayload(txData)
 	if err != nil {
 		return nil, err
@@ -166,14 +170,10 @@ func getChaincodeEvent(txData []byte) (*pb.ChaincodeEvent, error) {
 		return nil, errors.New("Could not extract channel header")
 	}
 
-	fmt.Println("ChannelID:", chHeader.ChannelId)
-	fmt.Println("TransactionID:", chHeader.TxId)
-
 	if com.HeaderType(chHeader.Type) == com.HeaderType_ENDORSER_TRANSACTION {
-
 		tx, err := utils.GetTransaction(payload.Data)
 		if err != nil {
-			return nil, errors.New("Error unmarshalling transaction payload")
+			return nil, err
 		}
 
 		chaincodeActionPayload, err := utils.GetChaincodeActionPayload(tx.Actions[0].Payload)
@@ -191,11 +191,15 @@ func getChaincodeEvent(txData []byte) (*pb.ChaincodeEvent, error) {
 			return nil, err
 		}
 
-		fmt.Println("chaincode id : ", chaincodeInvocationSpec.ChaincodeSpec.ChaincodeId.Name)
-
-		for i, a := range chaincodeInvocationSpec.ChaincodeSpec.Input.Args {
-			log.Infof("arg %v is %v", i, string(a))
+		transaction := &Transaction{
+			ChannelID:     chHeader.ChannelId,
+			ChaincodeID:   chaincodeInvocationSpec.ChaincodeSpec.ChaincodeId.Name,
+			TransactionID: chHeader.TxId,
+			Action:        string(chaincodeInvocationSpec.ChaincodeSpec.Input.Args[0]),
+			Args:          chaincodeInvocationSpec.ChaincodeSpec.Input.Args[1:],
 		}
+
+		return transaction, nil
 	}
 
 	return nil, nil

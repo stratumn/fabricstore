@@ -243,6 +243,18 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 	return
 }
 
+// Create the immutable part of a segment.
+// The input link is expected to be valid.
+// Returns the link hash or an error.
+func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+	return nil, nil
+}
+
+// Add an evidence to a segment.
+func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
+	return nil
+}
+
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
 func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
 	filterBytes, _ := json.Marshal(filter)
@@ -349,17 +361,20 @@ func (f *FabricStore) listenToBlockEvents() error {
 // onBlock is the callback function called on block events.
 func (f *FabricStore) onBlock(block *common.Block) {
 	log.Infof("Received block %v", block.Header.Number)
-	if err := readBlock(block); err != nil {
+	transactions, err := readBlock(block)
+	if err != nil {
 		panic(err)
 	}
-}
-
-type EvidenceGenerator struct {
-	store         *FabricStore
-	currentHeight int
-}
-
-func (e *EvidenceGenerator) start() {
-	e.currentHeight = 0 // get from store adapter
-
+	for _, tx := range transactions {
+		if tx.Action == "SaveSegment" {
+			segment := &cs.Segment{}
+			if err := json.Unmarshal(tx.Args[0], segment); err != nil {
+				panic(err)
+			}
+			for _, c := range f.didSaveChans {
+				c <- segment
+			}
+			// TODO Generate evidence and call f.AddEvidence
+		}
+	}
 }
