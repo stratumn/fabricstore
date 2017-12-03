@@ -22,7 +22,6 @@ import (
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 
 	"github.com/stratumn/sdk/cs"
@@ -62,6 +61,9 @@ type Config struct {
 type FabricStore struct {
 	session      *fabapi.Session
 	fabricClient apitxn.ChannelClient
+
+	// channel is used to query blocks.
+	channel fab.Channel
 
 	// channelClient is used to send transaction proposals.
 	channelClient apitxn.ChannelClient
@@ -122,12 +124,18 @@ func New(config *Config) (*FabricStore, error) {
 		return nil, err
 	}
 
+	channel, err := getChannel(peerClient, config.ChannelID, client.Organization)
+	if err != nil {
+		return nil, err
+	}
+
 	adapter := &FabricStore{
 		fabricClient:    chClient,
 		channelClient:   chClient,
 		session:         session,
 		peerClient:      peerClient,
 		eventHub:        eventHub,
+		channel:         channel,
 		config:          config,
 		fabricEventChan: make(chan *apitxn.CCEvent, 256),
 	}
@@ -340,39 +348,18 @@ func (f *FabricStore) listenToBlockEvents() error {
 
 // onBlock is the callback function called on block events.
 func (f *FabricStore) onBlock(block *common.Block) {
-	log.Infof("Received block")
-	// if err := decodeBlock(block); err != nil {
-	// 	t.Logf(err.Error())
-	// 	t.FailNow()
-	// }
+	log.Infof("Received block %v", block.Header.Number)
+	if err := readBlock(block); err != nil {
+		panic(err)
+	}
 }
 
-func getEventHub(client fab.FabricClient) (fab.EventHub, error) {
-	eventHub, err := events.NewEventHub(client)
-	if err != nil {
-		return nil, err
-	}
-	foundEventHub := false
-	peerConfig, err := client.Config().PeersConfig("Org1")
-	if err != nil {
-		return nil, err
-	}
-	for _, p := range peerConfig {
-		if p.URL != "" {
-			log.Infof("EventHub connect to peer (%s)", p.URL)
-			serverHostOverride := ""
-			if str, ok := p.GRPCOptions["ssl-target-name-override"].(string); ok {
-				serverHostOverride = str
-			}
-			eventHub.SetPeerAddr(p.EventURL, p.TLSCACerts.Path, serverHostOverride)
-			foundEventHub = true
-			break
-		}
-	}
+type EvidenceGenerator struct {
+	store         *FabricStore
+	currentHeight int
+}
 
-	if !foundEventHub {
-		return nil, err
-	}
+func (e *EvidenceGenerator) start() {
+	e.currentHeight = 0 // get from store adapter
 
-	return eventHub, nil
 }
