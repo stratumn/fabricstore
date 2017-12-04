@@ -46,8 +46,8 @@ func NewTestClient() *FabricStore {
 		Commit:      "00000000000000000000000000000000",
 	}
 	s := FabricStore{
-		fabricClient: &MockClient{},
-		config:       &config,
+		channelClient: &MockClient{},
+		config:        &config,
 	}
 	return &s
 }
