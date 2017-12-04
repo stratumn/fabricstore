@@ -91,6 +91,12 @@
   version = "1.0"
 
 [[projects]]
+  name = "github.com/gibson042/canonicaljson-go"
+  packages = ["."]
+  revision = "81f5327eb8367be6f106cd62f136b6f25b4c1678"
+  version = "v1.0.3"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
@@ -134,7 +140,7 @@
 
 [[projects]]
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/crypto","common/errors","common/flogging","common/ledger","common/metadata","common/util","core/chaincode/platforms","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/config","core/container/util","msp","protos/common","protos/ledger/queryresult","protos/msp","protos/peer","protos/utils"]
+  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/crypto","common/errors","common/flogging","common/ledger","common/metadata","common/util","core/chaincode/platforms","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/config","core/container/util","core/ledger/util","msp","protos/common","protos/ledger/queryresult","protos/msp","protos/peer","protos/utils"]
   revision = "f947d6d8b6722da3aec6d82663989a96071f96a7"
   version = "v1.0.3"
 
@@ -246,10 +252,9 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/stratumn/sdk"
   packages = ["bufferedbatch","cs","cs/cstesting","jsonhttp","jsonws","store","store/storehttp","testutil","types"]
-  revision = "406c35b339ed1f5c6119d60fbbb74370964d0816"
+  revision = "e9fcf645dac81efb3130c9ca88eaa2d897c41b71"
 
 [[projects]]
   branch = "master"
@@ -325,6 +330,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d58001ed608fa3e6cbbd3a5a4b7d310520fb572245a71bc2dccd4ea8772ba7d3"
+  inputs-digest = "7c80aa024a875c951343c591221937746c31fba2d8c2da65c95d9b734ca782df"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -160,41 +160,74 @@ func (f *FabricStore) GetInfo() (interface{}, error) {
 
 // SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
 func (f *FabricStore) SaveSegment(segment *cs.Segment) error {
-	segmentBytes, _ := json.Marshal(segment)
+	// segmentBytes, _ := json.Marshal(segment)
 
-	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	// _, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	// 	ChaincodeID: f.config.ChaincodeID,
+	// 	Fcn:         "SaveSegment",
+	// 	Args:        [][]byte{segmentBytes},
+	// })
+
+	// return err
+
+	linkHash, err := f.CreateLink(&segment.Link)
+	if err != nil {
+		return err
+	}
+
+	for _, evidence := range segment.Meta.Evidences {
+		if err := f.AddEvidence(linkHash, evidence); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
+func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+	linkHash, err := link.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	linkBytes, _ := json.Marshal(link)
+
+	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "SaveSegment",
-		Args:        [][]byte{segmentBytes},
+		Fcn:         "CreateLink",
+		Args:        [][]byte{linkBytes},
 	})
-
-	return err
+	return linkHash, nil
 }
 
 // GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
-func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (segment *cs.Segment, err error) {
+func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "GetSegment",
+		Fcn:         "GetLink",
 		Args:        [][]byte{[]byte(linkHash.String())},
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
 	if response == nil {
-		return
+		return nil, nil
 	}
 
-	segment = &cs.Segment{}
-	err = json.Unmarshal(response, segment)
+	link := cs.Link{}
+	err = json.Unmarshal(response, &link)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	if segment.IsEmpty() {
-		segment = nil
+	segment := &cs.Segment{
+		Link: link,
 	}
-	return
+
+	// AddEvidences to Segment
+
+	return segment, nil
 }
 
 // DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
@@ -206,7 +239,7 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 
 	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "DeleteSegment",
+		Fcn:         "DeleteLink",
 		Args:        [][]byte{[]byte(linkHash.String())},
 	})
 	if err != nil {
@@ -216,14 +249,14 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 	return
 }
 
-// CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
-func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
-	return nil, nil
-}
-
 // AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
 func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
 	return nil
+}
+
+// GetEvidences implements github.com/stratumn/sdk/store.EvidenceReader.GetEvidences.
+func (f *FabricStore) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, error) {
+	return nil, nil
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
@@ -232,17 +265,26 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "FindSegments",
+		Fcn:         "FindLinks",
 		Args:        [][]byte{filterBytes},
 	})
 	if err != nil {
 		return
 	}
-
-	err = json.Unmarshal(response, &segmentSlice)
+	links := []cs.Link{}
+	err = json.Unmarshal(response, &links)
 	if err != nil {
 		return
 	}
+
+	for _, link := range links {
+		segment := &cs.Segment{
+			Link: link,
+		}
+		segmentSlice = append(segmentSlice, segment)
+	}
+
+	// Add evidences to segments
 
 	// This should be removed once limit and skip are implemented in fabric/couchDB
 	segmentSlice = filter.Pagination.PaginateSegments(segmentSlice)
@@ -337,10 +379,13 @@ func (f *FabricStore) onBlock(block *common.Block) {
 		panic(err)
 	}
 	for _, tx := range transactions {
-		if tx.Action == "SaveSegment" {
-			segment := &cs.Segment{}
-			if err := json.Unmarshal(tx.Args[0], segment); err != nil {
+		if tx.Action == "CreateLink" {
+			link := cs.Link{}
+			if err := json.Unmarshal(tx.Args[0], &link); err != nil {
 				panic(err)
+			}
+			segment := &cs.Segment{
+				Link: link,
 			}
 			for _, c := range f.didSaveChans {
 				c <- segment

@@ -115,9 +115,8 @@ services:
       - ./scripts/install.sh:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/install.sh
       - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto
       - ./channel-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/config
-      - $GOPATH/src/github.com/stratumn/fabricstore/chaincode/:/opt/gopath/src/github.com/
-      - $GOPATH/src/github.com/stratumn/fabricstore/evidence/:/opt/gopath/src/github.com/stratumn/fabricstore/evidence
-      - $GOPATH/src/github.com/stratumn/fabricstore/vendor/github.com/stratumn/sdk:/opt/gopath/src/github.com/stratumn/sdk
+      - $GOPATH/src/github.com/stratumn/fabricstore/vendor/github.com/:/opt/gopath/src/github.com
+      - $GOPATH/src/github.com/stratumn/fabricstore/chaincode/pop/:/opt/gopath/src/github.com/pop
     depends_on:
       - orderer.example.com
       - peer0.org1.example.com

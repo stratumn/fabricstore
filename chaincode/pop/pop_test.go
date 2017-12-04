@@ -57,13 +57,13 @@ func checkInvoke(t *testing.T, stub *shim.MockStub, args [][]byte) []byte {
 	return res.Payload
 }
 
-func saveSegment(t *testing.T, stub *shim.MockStub, segment *cs.Segment) {
-	segmentBytes, err := json.Marshal(segment)
+func createLink(t *testing.T, stub *shim.MockStub, link *cs.Link) {
+	linkBytes, err := json.Marshal(link)
 	if err != nil {
-		fmt.Println("Could not marshal segment")
+		fmt.Println("Could not marshal link")
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte("SaveSegment"), segmentBytes})
+	checkInvoke(t, stub, [][]byte{[]byte(CreateLink), linkBytes})
 }
 
 func TestPop_Init(t *testing.T) {
@@ -80,51 +80,52 @@ func TestPop_InvalidFunction(t *testing.T) {
 	stub.MockInvoke("1", [][]byte{[]byte("0000")})
 }
 
-func TestPop_SaveSegment(t *testing.T) {
+func TestPop_CreateLink(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
 	segment := cstesting.RandomSegment()
+
 	delete(segment.Link.Meta, "prevLinkHash")
+	segment.SetLinkHash()
 
-	saveSegment(t, stub, segment)
+	createLink(t, stub, &segment.Link)
 
-	payload := checkQuery(t, stub, [][]byte{[]byte("GetSegment"), []byte(segment.GetLinkHashString())})
-	savedSegment := &cs.Segment{}
-	json.Unmarshal(payload, savedSegment)
+	payload := checkQuery(t, stub, [][]byte{[]byte(GetLink), []byte(segment.GetLinkHashString())})
+	savedLink := &cs.Link{}
+	json.Unmarshal(payload, savedLink)
 
-	segment.Meta.Evidences = savedSegment.Meta.Evidences
-	segmentBytes, _ := json.Marshal(segment)
+	linkBytes, _ := json.Marshal(segment.Link)
 
-	if string(segmentBytes) != string(payload) {
-		fmt.Println("Segment not saved into database")
+	if string(linkBytes) != string(payload) {
+		fmt.Println("Link not saved into database")
 		t.FailNow()
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte("DeleteSegment"), []byte(segment.GetLinkHashString())})
-	res := stub.MockInvoke("1", [][]byte{[]byte("GetSegment"), []byte(segment.GetLinkHashString())})
+	checkInvoke(t, stub, [][]byte{[]byte(DeleteLink), []byte(segment.GetLinkHashString())})
+	res := stub.MockInvoke("1", [][]byte{[]byte(GetLink), []byte(segment.GetLinkHashString())})
 	if res.Payload != nil {
-		fmt.Println("DeleteSegment failed")
+		fmt.Println("DeleteLink failed")
 		t.FailNow()
 	}
 }
 
-func TestPop_FindSegmentsMock(t *testing.T) {
+func TestPop_FindLinksMock(t *testing.T) {
 	contract := SmartContract{}
-	stub := &FindSegmentsMockStub{}
+	stub := &FindLinksMockStub{}
 	filter := store.SegmentFilter{}
 	filterBytes, _ := json.Marshal(filter)
-	contract.FindSegments(stub, []string{string(filterBytes)})
+	contract.FindLinks(stub, []string{string(filterBytes)})
 }
 
-func TestPop_FindSegments(t *testing.T) {
+func TestPop_FindLinks(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
 	filter := store.SegmentFilter{}
 	filterBytes, _ := json.Marshal(filter)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte("FindSegments"), filterBytes})
+	res := stub.MockInvoke("1", [][]byte{[]byte(FindLinks), filterBytes})
 	if res.Status == shim.ERROR {
 		if string(res.Message) != "Not Implemented" {
 			t.FailNow()
@@ -147,7 +148,7 @@ func TestPop_GetMapIDs(t *testing.T) {
 	filter := store.MapFilter{}
 	filterBytes, _ := json.Marshal(filter)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte("GetMapIDs"), filterBytes})
+	res := stub.MockInvoke("1", [][]byte{[]byte(GetMapIDs), filterBytes})
 	if res.Status == shim.ERROR {
 		if string(res.Message) != "Not Implemented" {
 			t.FailNow()
@@ -155,29 +156,29 @@ func TestPop_GetMapIDs(t *testing.T) {
 	}
 }
 
-func TestPop_SaveSegmentIncorrect(t *testing.T) {
+// func TestPop_SaveSegmentIncorrect(t *testing.T) {
+// 	cc := new(SmartContract)
+// 	stub := shim.NewMockStub("pop", cc)
+
+// 	res := stub.MockInvoke("1", [][]byte{[]byte("SaveSegment"), []byte("")})
+// 	if res.Status != shim.ERROR {
+// 		fmt.Println("SaveSegment should have failed")
+// 		t.FailNow()
+// 	} else {
+// 		if res.Message != "Could not parse segment" {
+// 			fmt.Println("Failed with error", res.Message, "expected", "Could not parse segment")
+// 			t.FailNow()
+// 		}
+// 	}
+// }
+
+func TestPop_GetLinkDoesNotExist(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte("SaveSegment"), []byte("")})
-	if res.Status != shim.ERROR {
-		fmt.Println("SaveSegment should have failed")
-		t.FailNow()
-	} else {
-		if res.Message != "Could not parse segment" {
-			fmt.Println("Failed with error", res.Message, "expected", "Could not parse segment")
-			t.FailNow()
-		}
-	}
-}
-
-func TestPop_GetSegmentDoesNotExist(t *testing.T) {
-	cc := new(SmartContract)
-	stub := shim.NewMockStub("pop", cc)
-
-	res := stub.MockInvoke("1", [][]byte{[]byte("GetSegment"), []byte("")})
+	res := stub.MockInvoke("1", [][]byte{[]byte(GetLink), []byte("")})
 	if res.Payload != nil {
-		fmt.Println("GetSegment should have failed")
+		fmt.Println("GetLink should return nil")
 		t.FailNow()
 	}
 }
@@ -223,7 +224,7 @@ func TestPop_newMapQuery(t *testing.T) {
 	}
 }
 
-func TestPop_newSegmentQuery(t *testing.T) {
+func TestPop_newLinkQuery(t *testing.T) {
 	pagination := store.Pagination{
 		Limit:  10,
 		Offset: 15,
@@ -242,9 +243,9 @@ func TestPop_newSegmentQuery(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	queryString, err := newSegmentQuery(filterBytes)
-	if queryString != "{\"selector\":{\"docType\":\"segment\",\"segment.link.meta.prevLinkHash\":\"085fa4322980286778f896fe11c4f55c46609574d9188a3c96427c76b8500bcd\",\"segment.link.meta.process\":\"main\",\"segment.link.meta.mapId\":{\"$in\":[\"map1\",\"map2\"]},\"segment.link.meta.tags\":{\"$all\":[\"tag1\"]}},\"limit\":10,\"skip\":15}" {
-		fmt.Println("Segment query failed")
+	queryString, err := newLinkQuery(filterBytes)
+	if queryString != "{\"selector\":{\"docType\":\"link\",\"link.meta.prevLinkHash\":\"085fa4322980286778f896fe11c4f55c46609574d9188a3c96427c76b8500bcd\",\"link.meta.process\":\"main\",\"link.meta.mapId\":{\"$in\":[\"map1\",\"map2\"]},\"link.meta.tags\":{\"$all\":[\"tag1\"]}},\"limit\":10,\"skip\":15}" {
+		fmt.Println("Link query failed")
 		t.FailNow()
 	}
 }
@@ -297,52 +298,52 @@ func (m *mapIterator) Close() error {
 
 }
 
-type FindSegmentsMockStub struct {
+type FindLinksMockStub struct {
 	shim.MockStub
 }
 
-func (p *FindSegmentsMockStub) GetQueryResult(queryString string) (shim.StateQueryIteratorInterface, error) {
+func (p *FindLinksMockStub) GetQueryResult(queryString string) (shim.StateQueryIteratorInterface, error) {
 	segment := cstesting.RandomSegment()
-	segmentDoc := &SegmentDoc{
-		ObjectType: ObjectTypeSegment,
+	linkDoc := &LinkDoc{
+		ObjectType: ObjectTypeLink,
 		ID:         segment.GetLinkHashString(),
-		Segment:    *segment,
+		Link:       &segment.Link,
 	}
-	iterator := segmentIterator{
-		[]*SegmentDoc{segmentDoc},
+	iterator := linkIterator{
+		[]*LinkDoc{linkDoc},
 	}
 	return &iterator, nil
 }
 
-type segmentIterator struct {
-	SegmentDocs []*SegmentDoc
+type linkIterator struct {
+	LinkDocs []*LinkDoc
 }
 
-func (s *segmentIterator) HasNext() bool {
-	if len(s.SegmentDocs) > 0 {
+func (s *linkIterator) HasNext() bool {
+	if len(s.LinkDocs) > 0 {
 		return true
 	}
 	return false
 }
-func (s *segmentIterator) Next() (*queryresult.KV, error) {
-	if len(s.SegmentDocs) == 0 {
+func (s *linkIterator) Next() (*queryresult.KV, error) {
+	if len(s.LinkDocs) == 0 {
 		return nil, errors.New("Empty")
 	}
-	segmentDoc := s.SegmentDocs[0]
-	segmentDocBytes, err := json.Marshal(segmentDoc)
+	linkDoc := s.LinkDocs[0]
+	linkDocBytes, err := json.Marshal(linkDoc)
 	if err != nil {
 		return nil, err
 	}
 
-	s.SegmentDocs = s.SegmentDocs[1:]
+	s.LinkDocs = s.LinkDocs[1:]
 
 	return &queryresult.KV{
-		Key:       segmentDoc.ID,
-		Value:     segmentDocBytes,
+		Key:       linkDoc.ID,
+		Value:     linkDocBytes,
 		Namespace: "mychannel",
 	}, nil
 }
 
-func (s *segmentIterator) Close() error {
+func (s *linkIterator) Close() error {
 	return nil
 }

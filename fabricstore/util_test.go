@@ -58,18 +58,18 @@ type MockClient struct{}
 // ExecuteTx execute transaction
 func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.TransactionID, err error) {
 	switch req.Fcn {
-	case "SaveSegment":
+	case "CreateLink":
 		err = nArgsError(1, req.Args)
 		if err != nil {
 			return
 		}
 
-		segment := &cs.Segment{}
-		err = json.Unmarshal(req.Args[0], segment)
+		link := &cs.Link{}
+		err = json.Unmarshal(req.Args[0], link)
 		if err != nil {
 			return
 		}
-	case "DeleteSegment":
+	case "DeleteLink":
 		err = nArgsError(1, req.Args)
 		if err != nil {
 			return
@@ -109,17 +109,17 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 	}
 
 	switch req.Fcn {
-	case "GetSegment":
+	case "GetLink":
 		_, err = types.NewBytes32FromString(string(req.Args[0]))
 		if err != nil {
 			return
 		}
 
 		segment := cstesting.RandomSegment()
-		result, err = json.Marshal(segment)
+		result, err = json.Marshal(segment.Link)
 
 		return
-	case "FindSegments":
+	case "FindLinks":
 		segmentFilter := &store.SegmentFilter{}
 		err = json.Unmarshal(req.Args[0], segmentFilter)
 		if err != nil {
@@ -127,8 +127,8 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 		}
 
 		segment := cstesting.RandomSegment()
-		segments := cs.SegmentSlice{segment}
-		result, err = json.Marshal(segments)
+		links := []cs.Link{segment.Link}
+		result, err = json.Marshal(links)
 
 		return
 	case "GetMapIDs":

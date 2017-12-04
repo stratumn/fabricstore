@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/stratumn/fabricstore/evidence"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 
@@ -38,21 +36,26 @@ type SmartContract struct {
 
 // ObjectType used in CouchDB documents
 const (
-	ObjectTypeSegment = "segment"
-	ObjectTypeMap     = "map"
-	ObjectTypeValue   = "value"
+	// ObjectTypeSegment = "segment"
+	ObjectTypeMap   = "map"
+	ObjectTypeValue = "value"
+	ObjectTypeLink  = "link"
 )
 
 // Smart contract functions
 const (
-	GetSegment    = "GetSegment"
-	FindSegments  = "FindSegments"
-	GetMapIDs     = "GetMapIDs"
-	SaveSegment   = "SaveSegment"
-	DeleteSegment = "DeleteSegment"
-	SaveValue     = "SaveValue"
-	GetValue      = "GetValue"
-	DeleteValue   = "DeleteValue"
+	// GetSegment = "GetSegment"
+	GetLink = "GetLink"
+	// FindSegments = "FindSegments"
+	FindLinks = "FindLinks"
+	GetMapIDs = "GetMapIDs"
+	// SaveSegment   = "SaveSegment"
+	CreateLink = "CreateLink"
+	// DeleteSegment = "DeleteSegment"
+	DeleteLink  = "DeleteLink"
+	SaveValue   = "SaveValue"
+	GetValue    = "GetValue"
+	DeleteValue = "DeleteValue"
 )
 
 // MapDoc is used to store maps in CouchDB
@@ -62,11 +65,18 @@ type MapDoc struct {
 	Process    string `json:"process"`
 }
 
-// SegmentDoc is used to store segments in CouchDB
-type SegmentDoc struct {
-	ObjectType string     `json:"docType"`
-	ID         string     `json:"id"`
-	Segment    cs.Segment `json:"segment"`
+// // SegmentDoc is used to store segments in CouchDB
+// type SegmentDoc struct {
+// 	ObjectType string     `json:"docType"`
+// 	ID         string     `json:"id"`
+// 	Segment    cs.Segment `json:"segment"`
+// }
+
+// LinkDoc is used to store links in CouchDB
+type LinkDoc struct {
+	ObjectType string   `json:"docType"`
+	ID         string   `json:"id"`
+	Link       *cs.Link `json:"link"`
 }
 
 // MapSelector used in MapQuery
@@ -109,14 +119,14 @@ func newMapQuery(filterBytes []byte) (string, error) {
 	return string(queryBytes), nil
 }
 
-// SegmentSelector used in SegmentQuery
-type SegmentSelector struct {
+// LinkSelector used in LinkQuery
+type LinkSelector struct {
 	ObjectType   string    `json:"docType"`
 	LinkHash     string    `json:"id,omitempty"`
-	PrevLinkHash string    `json:"segment.link.meta.prevLinkHash,omitempty"`
-	Process      string    `json:"segment.link.meta.process,omitempty"`
-	MapIds       *MapIdsIn `json:"segment.link.meta.mapId,omitempty"`
-	Tags         *TagsAll  `json:"segment.link.meta.tags,omitempty"`
+	PrevLinkHash string    `json:"link.meta.prevLinkHash,omitempty"`
+	Process      string    `json:"link.meta.process,omitempty"`
+	MapIds       *MapIdsIn `json:"link.meta.mapId,omitempty"`
+	Tags         *TagsAll  `json:"link.meta.tags,omitempty"`
 }
 
 // MapIdsIn specifies that segment mapId should be in specified list
@@ -129,46 +139,46 @@ type TagsAll struct {
 	Tags []string `json:"$all,omitempty"`
 }
 
-// SegmentQuery used in CouchDB rich queries
-type SegmentQuery struct {
-	Selector SegmentSelector `json:"selector,omitempty"`
-	Limit    int             `json:"limit,omitempty"`
-	Skip     int             `json:"skip,omitempty"`
+// LinkQuery used in CouchDB rich queries
+type LinkQuery struct {
+	Selector LinkSelector `json:"selector,omitempty"`
+	Limit    int          `json:"limit,omitempty"`
+	Skip     int          `json:"skip,omitempty"`
 }
 
-func newSegmentQuery(filterBytes []byte) (string, error) {
+func newLinkQuery(filterBytes []byte) (string, error) {
 	filter := &store.SegmentFilter{}
 	if err := json.Unmarshal(filterBytes, filter); err != nil {
 		return "", err
 	}
 
-	segmentSelector := SegmentSelector{}
-	segmentSelector.ObjectType = ObjectTypeSegment
+	linkSelector := LinkSelector{}
+	linkSelector.ObjectType = ObjectTypeLink
 
 	if filter.PrevLinkHash != nil {
-		segmentSelector.PrevLinkHash = *filter.PrevLinkHash
+		linkSelector.PrevLinkHash = *filter.PrevLinkHash
 	}
 	if filter.Process != "" {
-		segmentSelector.Process = filter.Process
+		linkSelector.Process = filter.Process
 	}
 	if len(filter.MapIDs) > 0 {
-		segmentSelector.MapIds = &MapIdsIn{filter.MapIDs}
+		linkSelector.MapIds = &MapIdsIn{filter.MapIDs}
 	} else {
-		segmentSelector.Tags = nil
+		linkSelector.Tags = nil
 	}
 	if len(filter.Tags) > 0 {
-		segmentSelector.Tags = &TagsAll{filter.Tags}
+		linkSelector.Tags = &TagsAll{filter.Tags}
 	} else {
-		segmentSelector.Tags = nil
+		linkSelector.Tags = nil
 	}
 
-	segmentQuery := SegmentQuery{
-		Selector: segmentSelector,
+	linkQuery := LinkQuery{
+		Selector: linkSelector,
 		Limit:    filter.Pagination.Limit,
 		Skip:     filter.Pagination.Offset,
 	}
 
-	queryBytes, err := json.Marshal(segmentQuery)
+	queryBytes, err := json.Marshal(linkQuery)
 	if err != nil {
 		return "", err
 	}
@@ -187,16 +197,24 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	function, args := APIstub.GetFunctionAndParameters()
 
 	switch function {
-	case GetSegment:
-		return s.GetSegment(APIstub, args)
-	case FindSegments:
-		return s.FindSegments(APIstub, args)
+	// case GetSegment:
+	// 	return s.GetSegment(APIstub, args)
+	// case FindSegments:
+	// 	return s.FindSegments(APIstub, args)
+	case GetLink:
+		return s.GetLink(APIstub, args)
+	case FindLinks:
+		return s.FindLinks(APIstub, args)
 	case GetMapIDs:
 		return s.GetMapIDs(APIstub, args)
-	case SaveSegment:
-		return s.SaveSegment(APIstub, args)
-	case DeleteSegment:
-		return s.DeleteSegment(APIstub, args)
+	// case SaveSegment:
+	// 	return s.SaveSegment(APIstub, args)
+	case CreateLink:
+		return s.CreateLink(APIstub, args)
+	// case DeleteSegment:
+	// 	return s.DeleteSegment(APIstub, args)
+	case DeleteLink:
+		return s.DeleteLink(APIstub, args)
 	case SaveValue:
 		return s.SaveValue(APIstub, args)
 	case GetValue:
@@ -209,106 +227,217 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 }
 
 // saveMap saves map into CouchDB using map document
-func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, segment *cs.Segment) error {
+// func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, segment *cs.Segment) error {
+func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, link *cs.Link) error {
 	mapDoc := MapDoc{
-		ObjectTypeMap,
-		segment.Link.GetMapID(),
-		segment.Link.GetProcess(),
+		ObjectType: ObjectTypeMap,
+		ID:         link.GetMapID(),
+		Process:    link.GetProcess(),
 	}
 	mapDocBytes, err := json.Marshal(mapDoc)
 	if err != nil {
 		return err
 	}
 
-	return stub.PutState(segment.Link.GetMapID(), mapDocBytes)
+	return stub.PutState(mapDoc.ID, mapDocBytes)
 }
 
-// SaveSegment saves segment into CouchDB using segment document
-func (s *SmartContract) SaveSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
-	// Parse segment
+// CreateLink persits Link to blockchain.
+func (s *SmartContract) CreateLink(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	byteArgs := stub.GetArgs()
-	segment := &cs.Segment{}
-	if err := json.Unmarshal(byteArgs[1], segment); err != nil {
-		return shim.Error("Could not parse segment")
-	}
-
-	// Validate segment
-	if err := segment.Validate(); err != nil {
-		return shim.Error(err.Error())
-	}
-
-	// Add fabric evidence
-	if err := addEvidence(segment, stub); err != nil {
-		return shim.Error(err.Error())
+	link := &cs.Link{}
+	if err := json.Unmarshal(byteArgs[1], link); err != nil {
+		return shim.Error("Could not parse link")
 	}
 
 	// Check has prevLinkHash if not create map else check prevLinkHash exists
-	prevLinkHash := segment.Link.GetPrevLinkHashString()
+	prevLinkHash := link.GetPrevLinkHashString()
 	if prevLinkHash == "" {
-		// Create map
-		if err := s.saveMap(stub, segment); err != nil {
+		if err := s.saveMap(stub, link); err != nil {
 			return shim.Error(err.Error())
 		}
 	}
 
-	//  Save segment
-	segmentDoc := SegmentDoc{
-		ObjectTypeSegment,
-		segment.GetLinkHashString(),
-		*segment,
-	}
-	segmentDocBytes, err := json.Marshal(segmentDoc)
+	linkHashString, err := link.HashString()
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	if err := stub.PutState(segment.GetLinkHashString(), segmentDocBytes); err != nil {
+
+	linkDoc := &LinkDoc{
+		ObjectType: ObjectTypeLink,
+		ID:         linkHashString,
+		Link:       link,
+	}
+	linkDocBytes, err := json.Marshal(linkDoc)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	if err := stub.PutState(linkDoc.ID, linkDocBytes); err != nil {
 		return shim.Error(err.Error())
 	}
 
 	// Send event
-	segmentBytes, _ := json.Marshal(segment)
-	if err := stub.SetEvent("saveSegment", segmentBytes); err != nil {
+	if err := stub.SetEvent(CreateLink, byteArgs[1]); err != nil {
 		return shim.Error(err.Error())
 	}
 
 	return shim.Success(nil)
 }
 
-// GetSegment gets segment for given linkHash
-func (s *SmartContract) GetSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
-	segmentDocBytes, err := stub.GetState(args[0])
+// // SaveSegment saves segment into CouchDB using segment document
+// func (s *SmartContract) SaveSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// 	// Parse segment
+// 	byteArgs := stub.GetArgs()
+// 	segment := &cs.Segment{}
+// 	if err := json.Unmarshal(byteArgs[1], segment); err != nil {
+// 		return shim.Error("Could not parse segment")
+// 	}
+
+// 	// Validate segment
+// 	if err := segment.Validate(); err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	// Add fabric evidence
+// 	if err := addEvidence(segment, stub); err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	// Check has prevLinkHash if not create map else check prevLinkHash exists
+// 	prevLinkHash := segment.Link.GetPrevLinkHashString()
+// 	if prevLinkHash == "" {
+// 		// Create map
+// 		if err := s.saveMap(stub, segment); err != nil {
+// 			return shim.Error(err.Error())
+// 		}
+// 	}
+
+// 	//  Save segment
+// 	segmentDoc := SegmentDoc{
+// 		ObjectTypeSegment,
+// 		segment.GetLinkHashString(),
+// 		*segment,
+// 	}
+// 	segmentDocBytes, err := json.Marshal(segmentDoc)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	if err := stub.PutState(segment.GetLinkHashString(), segmentDocBytes); err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	// Send event
+// 	segmentBytes, _ := json.Marshal(segment)
+// 	if err := stub.SetEvent("saveSegment", segmentBytes); err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	return shim.Success(nil)
+// }
+
+// GetLink gets Link for given linkHash
+func (s *SmartContract) GetLink(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	linkDocBytes, err := stub.GetState(args[0])
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	if segmentDocBytes == nil {
+	if linkDocBytes == nil {
 		return shim.Success(nil)
 	}
 
-	segmentBytes, err := extractSegment(segmentDocBytes)
+	linkBytes, err := extractLink(linkDocBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	return shim.Success(segmentBytes)
+	return shim.Success(linkBytes)
 }
 
-// DeleteSegment deletes segment from CouchDB
-func (s *SmartContract) DeleteSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
-	shimResponse := s.GetSegment(stub, args)
+// // GetSegment gets segment for given linkHash
+// func (s *SmartContract) GetSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// 	segmentDocBytes, err := stub.GetState(args[0])
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	if segmentDocBytes == nil {
+// 		return shim.Success(nil)
+// 	}
+
+// 	segmentBytes, err := extractSegment(segmentDocBytes)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	return shim.Success(segmentBytes)
+// }
+
+// DeleteLink deletes link from CouchDB
+func (s *SmartContract) DeleteLink(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	shimResponse := s.GetLink(stub, args)
 	if shimResponse.Status == shim.ERROR {
 		return shimResponse
 	}
-	segmentBytes := shimResponse.Payload
+	linkBytes := shimResponse.Payload
 	err := stub.DelState(args[0])
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	return shim.Success(segmentBytes)
+	return shim.Success(linkBytes)
 }
 
-// FindSegments returns segments that match specified segment filter
-func (s *SmartContract) FindSegments(stub shim.ChaincodeStubInterface, args []string) sc.Response {
-	queryString, err := newSegmentQuery([]byte(args[0]))
+// // DeleteSegment deletes segment from CouchDB
+// func (s *SmartContract) DeleteSegment(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// 	shimResponse := s.GetSegment(stub, args)
+// 	if shimResponse.Status == shim.ERROR {
+// 		return shimResponse
+// 	}
+// 	segmentBytes := shimResponse.Payload
+// 	err := stub.DelState(args[0])
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	return shim.Success(segmentBytes)
+// }
+
+// // FindSegments returns segments that match specified segment filter
+// func (s *SmartContract) FindSegments(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// 	queryString, err := newSegmentQuery([]byte(args[0]))
+// 	if err != nil {
+// 		return shim.Error("Segment filter format incorrect")
+// 	}
+
+// 	resultsIterator, err := stub.GetQueryResult(queryString)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	var segments cs.SegmentSlice
+
+// 	for resultsIterator.HasNext() {
+// 		queryResponse, err := resultsIterator.Next()
+// 		if err != nil {
+// 			return shim.Error(err.Error())
+// 		}
+// 		segmentDoc := &SegmentDoc{}
+// 		if err := json.Unmarshal(queryResponse.Value, segmentDoc); err != nil {
+// 			return shim.Error(err.Error())
+// 		}
+// 		segments = append(segments, &segmentDoc.Segment)
+// 	}
+// 	sort.Sort(segments)
+
+// 	resultBytes, err := json.Marshal(segments)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+
+// 	return shim.Success(resultBytes)
+// }
+
+// FindLinks returns segments that match specified segment filter
+func (s *SmartContract) FindLinks(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	queryString, err := newLinkQuery([]byte(args[0]))
 	if err != nil {
 		return shim.Error("Segment filter format incorrect")
 	}
@@ -318,22 +447,21 @@ func (s *SmartContract) FindSegments(stub shim.ChaincodeStubInterface, args []st
 		return shim.Error(err.Error())
 	}
 
-	var segments cs.SegmentSlice
+	var links []*cs.Link
 
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-		segmentDoc := &SegmentDoc{}
-		if err := json.Unmarshal(queryResponse.Value, segmentDoc); err != nil {
+		linkDoc := &LinkDoc{}
+		if err := json.Unmarshal(queryResponse.Value, linkDoc); err != nil {
 			return shim.Error(err.Error())
 		}
-		segments = append(segments, &segmentDoc.Segment)
+		links = append(links, linkDoc.Link)
 	}
-	sort.Sort(segments)
 
-	resultBytes, err := json.Marshal(segments)
+	resultBytes, err := json.Marshal(links)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -415,40 +543,52 @@ func (s *SmartContract) DeleteValue(stub shim.ChaincodeStubInterface, args []str
 	return shim.Success(value)
 }
 
-func extractSegment(segmentDocBytes []byte) ([]byte, error) {
-	segmentDoc := &SegmentDoc{}
-	if err := json.Unmarshal(segmentDocBytes, segmentDoc); err != nil {
+func extractLink(linkDocBytes []byte) ([]byte, error) {
+	linkDoc := &LinkDoc{}
+	if err := json.Unmarshal(linkDocBytes, linkDoc); err != nil {
 		return nil, err
 	}
-	segmentBytes, err := json.Marshal(segmentDoc.Segment)
+	linkBytes, err := json.Marshal(linkDoc.Link)
 	if err != nil {
 		return nil, err
 	}
-	return segmentBytes, nil
+	return linkBytes, nil
 }
+
+// func extractSegment(segmentDocBytes []byte) ([]byte, error) {
+// 	segmentDoc := &SegmentDoc{}
+// 	if err := json.Unmarshal(segmentDocBytes, segmentDoc); err != nil {
+// 		return nil, err
+// 	}
+// 	segmentBytes, err := json.Marshal(segmentDoc.Segment)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return segmentBytes, nil
+// }
 
 func getValueCompositeKey(key string, stub shim.ChaincodeStubInterface) (compositeKey string, err error) {
 	compositeKey, err = stub.CreateCompositeKey(ObjectTypeValue, []string{key})
 	return
 }
 
-func addEvidence(segment *cs.Segment, stub shim.ChaincodeStubInterface) error {
-	timestamp, err := stub.GetTxTimestamp()
-	if err != nil {
-		return err
-	}
+// func addEvidence(segment *cs.Segment, stub shim.ChaincodeStubInterface) error {
+// 	timestamp, err := stub.GetTxTimestamp()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	transactionID := stub.GetTxID()
+// 	transactionID := stub.GetTxID()
 
-	ev, err := evidence.New(transactionID, uint64(timestamp.Seconds))
-	if err != nil {
-		return err
-	}
+// 	ev, err := evidence.New(transactionID, uint64(timestamp.Seconds))
+// 	if err != nil {
+// 		return err
+// 	}
 
-	segment.Meta.Evidences = append(segment.Meta.Evidences, ev)
+// 	segment.Meta.Evidences = append(segment.Meta.Evidences, ev)
 
-	return nil
-}
+// 	return nil
+// }
 
 // main function starts up the chaincode in the container during instantiate
 func main() {

@@ -135,6 +135,7 @@ func Test_GetSegment(t *testing.T) {
 	segment := cstesting.RandomSegment()
 	_, err := mockFabricstore.GetSegment(segment.GetLinkHash())
 	if err != nil {
+		t.Logf(err.Error())
 		t.FailNow()
 	}
 }
@@ -143,6 +144,7 @@ func Test_DeleteSegment(t *testing.T) {
 	segment := cstesting.RandomSegment()
 	_, err := mockFabricstore.DeleteSegment(segment.GetLinkHash())
 	if err != nil {
+		t.Logf(err.Error())
 		t.FailNow()
 	}
 }
@@ -381,6 +383,7 @@ func Test_AddDidSaveChannelIntegration(t *testing.T) {
 		fabricstore.AddDidSaveChannel(c)
 
 		segment := cstesting.RandomSegment()
+		segment.SetLinkHash()
 		if err := fabricstore.SaveSegment(segment); err != nil {
 			t.FailNow()
 		}
