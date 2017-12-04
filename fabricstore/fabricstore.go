@@ -120,7 +120,7 @@ func New(config *Config) (*FabricStore, error) {
 		return nil, err
 	}
 
-	eventHub, err := getEventHub(client)
+	eventHub, err := getEventHub(client, clientConfig.Organization)
 	if err != nil {
 		return nil, err
 	}

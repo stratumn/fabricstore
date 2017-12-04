@@ -95,13 +95,13 @@ func getOrderers(client fab.FabricClient) ([]*orderer.Orderer, error) {
 	return orderers, nil
 }
 
-func getEventHub(client fab.FabricClient) (fab.EventHub, error) {
+func getEventHub(client fab.FabricClient, orgName string) (fab.EventHub, error) {
 	eventHub, err := events.NewEventHub(client)
 	if err != nil {
 		return nil, err
 	}
 	foundEventHub := false
-	peerConfig, err := client.Config().PeersConfig("Org1")
+	peerConfig, err := client.Config().PeersConfig(orgName)
 	if err != nil {
 		return nil, err
 	}
