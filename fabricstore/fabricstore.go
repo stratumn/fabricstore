@@ -19,12 +19,16 @@ package fabricstore
 import (
 	"encoding/json"
 
+	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,10 +59,20 @@ type Config struct {
 
 // FabricStore is the type that implements github.com/stratumn/sdk/store.Adapter.
 type FabricStore struct {
-	fabricClient    apitxn.ChannelClient
-	didSaveChans    []chan *cs.Segment
-	fabricEventChan chan *apitxn.CCEvent
-	config          *Config
+	config       *Config
+	didSaveChans []chan *cs.Segment
+
+	// client is the client connection to the organization.
+	client fab.FabricClient
+
+	// channelClient is used to send transaction proposals.
+	channelClient apitxn.ChannelClient
+
+	// channel is used to query blocks.
+	channel fab.Channel
+
+	// eventHub is used to listen for new block events
+	eventHub fab.EventHub
 }
 
 // Info is the info returned by GetInfo.
@@ -81,38 +95,50 @@ func New(config *Config) (*FabricStore, error) {
 		return nil, err
 	}
 
-	chClient, err := sdk.NewChannelClient(config.ChannelID, "Admin")
+	clientConfig, err := sdk.ConfigProvider().Client()
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := sdk.NewPreEnrolledUserSession(clientConfig.Organization, "Admin")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sdk.NewSystemClient(session)
+	if err != nil {
+		return nil, err
+	}
+
+	channelClient, err := sdk.NewChannelClient(config.ChannelID, "Admin")
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := getChannel(client, config.ChannelID, clientConfig.Organization)
+	if err != nil {
+		return nil, err
+	}
+
+	eventHub, err := getEventHub(client, clientConfig.Organization)
 	if err != nil {
 		return nil, err
 	}
 
 	adapter := &FabricStore{
-		fabricClient:    chClient,
-		config:          config,
-		fabricEventChan: make(chan *apitxn.CCEvent, 256),
+		config:        config,
+		client:        client,
+		channelClient: channelClient,
+		channel:       channel,
+		eventHub:      eventHub,
 	}
 
-	// Register to saveSegment events
-	chClient.RegisterChaincodeEvent(adapter.fabricEventChan, config.ChaincodeID, "saveSegment")
-
-	// Start litening to events
-	go adapter.Listen()
+	// Listen to block events
+	if err := adapter.listenToBlockEvents(); err != nil {
+		return nil, err
+	}
 
 	return adapter, nil
-}
-
-// Listen starts listening to fabric saveSegment events
-func (f *FabricStore) Listen() {
-	for {
-		select {
-		case evt := <-f.fabricEventChan:
-			segment := &cs.Segment{}
-			json.Unmarshal(evt.Payload, segment)
-			for _, c := range f.didSaveChans {
-				c <- segment
-			}
-		}
-	}
 }
 
 // AddDidSaveChannel implements
@@ -136,7 +162,7 @@ func (f *FabricStore) GetInfo() (interface{}, error) {
 func (f *FabricStore) SaveSegment(segment *cs.Segment) error {
 	segmentBytes, _ := json.Marshal(segment)
 
-	_, err := f.fabricClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "SaveSegment",
 		Args:        [][]byte{segmentBytes},
@@ -147,7 +173,7 @@ func (f *FabricStore) SaveSegment(segment *cs.Segment) error {
 
 // GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
 func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (segment *cs.Segment, err error) {
-	response, err := f.fabricClient.Query(apitxn.QueryRequest{
+	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "GetSegment",
 		Args:        [][]byte{[]byte(linkHash.String())},
@@ -178,7 +204,7 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 		return
 	}
 
-	_, err = f.fabricClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "DeleteSegment",
 		Args:        [][]byte{[]byte(linkHash.String())},
@@ -190,11 +216,21 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 	return
 }
 
+// CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
+func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+	return nil, nil
+}
+
+// AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
+func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
+	return nil
+}
+
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
 func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
-	response, err := f.fabricClient.Query(apitxn.QueryRequest{
+	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "FindSegments",
 		Args:        [][]byte{filterBytes},
@@ -218,7 +254,7 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
-	response, err := f.fabricClient.Query(apitxn.QueryRequest{
+	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "GetMapIDs",
 		Args:        [][]byte{filterBytes},
@@ -245,7 +281,7 @@ func (f *FabricStore) NewBatch() (store.Batch, error) {
 
 // SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
 func (f *FabricStore) SaveValue(key, value []byte) error {
-	_, err := f.fabricClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "SaveValue",
 		Args:        [][]byte{key, value},
@@ -256,7 +292,7 @@ func (f *FabricStore) SaveValue(key, value []byte) error {
 
 // GetValue implements github.com/stratumn/sdk/store.Adapter.GetValue.
 func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
-	response, err := f.fabricClient.Query(apitxn.QueryRequest{
+	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "GetValue",
 		Args:        [][]byte{key},
@@ -275,11 +311,41 @@ func (f *FabricStore) DeleteValue(key []byte) (value []byte, err error) {
 		return nil, err
 	}
 
-	_, err = f.fabricClient.ExecuteTx(apitxn.ExecuteTxRequest{
+	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         "DeleteValue",
 		Args:        [][]byte{key},
 	})
 
 	return
+}
+
+func (f *FabricStore) listenToBlockEvents() error {
+	if err := f.eventHub.Connect(); err != nil {
+		return err
+	}
+
+	f.eventHub.RegisterBlockEvent(f.onBlock)
+	return nil
+}
+
+// onBlock is the callback function called on block events.
+func (f *FabricStore) onBlock(block *common.Block) {
+	log.Infof("Received block %v", block.Header.Number)
+	transactions, err := readBlock(block)
+	if err != nil {
+		panic(err)
+	}
+	for _, tx := range transactions {
+		if tx.Action == "SaveSegment" {
+			segment := &cs.Segment{}
+			if err := json.Unmarshal(tx.Args[0], segment); err != nil {
+				panic(err)
+			}
+			for _, c := range f.didSaveChans {
+				c <- segment
+			}
+			// TODO Generate evidence and call f.AddEvidence
+		}
+	}
 }
