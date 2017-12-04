@@ -176,6 +176,10 @@ func getChaincodeEvent(txData []byte) (*Transaction, error) {
 			return nil, err
 		}
 
+		if len(tx.Actions) != 1 {
+			return nil, errors.New("Expected exactly one item in transaction actions payload")
+		}
+
 		chaincodeActionPayload, err := utils.GetChaincodeActionPayload(tx.Actions[0].Payload)
 		if err != nil {
 			return nil, err
