@@ -64,9 +64,7 @@ func TestMain(m *testing.M) {
 	}
 
 	evidenceStore, err := filestore.New(&filestore.Config{
-		Version: "0",
-		Commit:  "0",
-		Path:    path,
+		Path: path,
 	})
 	if err != nil {
 		os.Exit(1)
@@ -402,7 +400,6 @@ func Test_AddDidSaveChannelIntegration(t *testing.T) {
 		fabricstore.AddDidSaveChannel(c)
 
 		segment := cstesting.RandomSegment()
-		segment.SetLinkHash()
 		if err := fabricstore.SaveSegment(segment); err != nil {
 			t.FailNow()
 		}

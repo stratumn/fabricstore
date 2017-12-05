@@ -196,7 +196,7 @@ func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 
 	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "CreateLink",
+		Fcn:         pc.CreateLink,
 		Args:        [][]byte{linkBytes},
 	})
 	return linkHash, nil
@@ -377,7 +377,7 @@ func (f *FabricStore) onBlock(block *common.Block) {
 		panic(err)
 	}
 	for _, tx := range transactions {
-		if tx.Action == "CreateLink" {
+		if tx.Action == pc.CreateLink {
 			link := cs.Link{}
 			if err := json.Unmarshal(tx.Args[0], &link); err != nil {
 				panic(err)
