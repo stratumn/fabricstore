@@ -18,11 +18,14 @@ package fabricstore
 
 import (
 	"encoding/json"
+	"sort"
 
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
+
+	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
@@ -203,7 +206,7 @@ func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "GetLink",
+		Fcn:         pc.GetLink,
 		Args:        [][]byte{[]byte(linkHash.String())},
 	})
 	if err != nil {
@@ -231,7 +234,7 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 
 	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "DeleteLink",
+		Fcn:         pc.DeleteLink,
 		Args:        [][]byte{[]byte(linkHash.String())},
 	})
 	if err != nil {
@@ -257,7 +260,7 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "FindLinks",
+		Fcn:         pc.FindLinks,
 		Args:        [][]byte{filterBytes},
 	})
 	if err != nil {
@@ -274,6 +277,8 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 		segmentSlice = append(segmentSlice, segment)
 	}
 
+	sort.Sort(segmentSlice)
+
 	// This should be removed once limit and skip are implemented in fabric/couchDB
 	segmentSlice = filter.Pagination.PaginateSegments(segmentSlice)
 
@@ -286,7 +291,7 @@ func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err erro
 
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "GetMapIDs",
+		Fcn:         pc.GetMapIDs,
 		Args:        [][]byte{filterBytes},
 	})
 	if err != nil {
@@ -313,7 +318,7 @@ func (f *FabricStore) NewBatch() (store.Batch, error) {
 func (f *FabricStore) SaveValue(key, value []byte) error {
 	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "SaveValue",
+		Fcn:         pc.SaveValue,
 		Args:        [][]byte{key, value},
 	})
 
@@ -324,7 +329,7 @@ func (f *FabricStore) SaveValue(key, value []byte) error {
 func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "GetValue",
+		Fcn:         pc.GetValue,
 		Args:        [][]byte{key},
 	})
 	if err != nil {
@@ -343,7 +348,7 @@ func (f *FabricStore) DeleteValue(key []byte) (value []byte, err error) {
 
 	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         "DeleteValue",
+		Fcn:         pc.DeleteValue,
 		Args:        [][]byte{key},
 	})
 

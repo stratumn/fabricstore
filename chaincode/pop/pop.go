@@ -22,6 +22,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 
+	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
+
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
 )
@@ -40,18 +42,6 @@ const (
 	ObjectTypeMap   = "map"
 	ObjectTypeValue = "value"
 	ObjectTypeLink  = "link"
-)
-
-// Smart contract functions
-const (
-	GetLink     = "GetLink"
-	CreateLink  = "CreateLink"
-	DeleteLink  = "DeleteLink"
-	FindLinks   = "FindLinks"
-	GetMapIDs   = "GetMapIDs"
-	SaveValue   = "SaveValue"
-	GetValue    = "GetValue"
-	DeleteValue = "DeleteValue"
 )
 
 // MapDoc is used to store maps in CouchDB
@@ -186,21 +176,21 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	function, args := APIstub.GetFunctionAndParameters()
 
 	switch function {
-	case GetLink:
+	case pc.GetLink:
 		return s.GetLink(APIstub, args)
-	case CreateLink:
+	case pc.CreateLink:
 		return s.CreateLink(APIstub, args)
-	case DeleteLink:
+	case pc.DeleteLink:
 		return s.DeleteLink(APIstub, args)
-	case FindLinks:
+	case pc.FindLinks:
 		return s.FindLinks(APIstub, args)
-	case GetMapIDs:
+	case pc.GetMapIDs:
 		return s.GetMapIDs(APIstub, args)
-	case SaveValue:
+	case pc.SaveValue:
 		return s.SaveValue(APIstub, args)
-	case GetValue:
+	case pc.GetValue:
 		return s.GetValue(APIstub, args)
-	case DeleteValue:
+	case pc.DeleteValue:
 		return s.DeleteValue(APIstub, args)
 	default:
 		return shim.Error("Invalid Smart Contract function name: " + function)
@@ -208,7 +198,6 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 }
 
 // saveMap saves map into CouchDB using map document
-// func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, segment *cs.Segment) error {
 func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, link *cs.Link) error {
 	mapDoc := MapDoc{
 		ObjectType: ObjectTypeMap,
@@ -259,7 +248,7 @@ func (s *SmartContract) CreateLink(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	// Send event
-	if err := stub.SetEvent(CreateLink, byteArgs[1]); err != nil {
+	if err := stub.SetEvent(pc.CreateLink, byteArgs[1]); err != nil {
 		return shim.Error(err.Error())
 	}
 

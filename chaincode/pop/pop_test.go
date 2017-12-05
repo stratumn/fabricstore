@@ -24,6 +24,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/ledger/queryresult"
 
+	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
+
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/cs/cstesting"
 	"github.com/stratumn/sdk/store"
@@ -63,7 +65,7 @@ func createLink(t *testing.T, stub *shim.MockStub, link *cs.Link) {
 		fmt.Println("Could not marshal link")
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte(CreateLink), linkBytes})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.CreateLink), linkBytes})
 }
 
 func TestPop_Init(t *testing.T) {
@@ -91,7 +93,7 @@ func TestPop_CreateLink(t *testing.T) {
 
 	createLink(t, stub, &segment.Link)
 
-	payload := checkQuery(t, stub, [][]byte{[]byte(GetLink), []byte(segment.GetLinkHashString())})
+	payload := checkQuery(t, stub, [][]byte{[]byte(pc.GetLink), []byte(segment.GetLinkHashString())})
 	savedLink := &cs.Link{}
 	json.Unmarshal(payload, savedLink)
 
@@ -102,8 +104,8 @@ func TestPop_CreateLink(t *testing.T) {
 		t.FailNow()
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte(DeleteLink), []byte(segment.GetLinkHashString())})
-	res := stub.MockInvoke("1", [][]byte{[]byte(GetLink), []byte(segment.GetLinkHashString())})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.DeleteLink), []byte(segment.GetLinkHashString())})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetLink), []byte(segment.GetLinkHashString())})
 	if res.Payload != nil {
 		fmt.Println("DeleteLink failed")
 		t.FailNow()
@@ -125,7 +127,7 @@ func TestPop_FindLinks(t *testing.T) {
 	filter := store.SegmentFilter{}
 	filterBytes, _ := json.Marshal(filter)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte(FindLinks), filterBytes})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.FindLinks), filterBytes})
 	if res.Status == shim.ERROR {
 		if string(res.Message) != "Not Implemented" {
 			t.FailNow()
@@ -148,7 +150,7 @@ func TestPop_GetMapIDs(t *testing.T) {
 	filter := store.MapFilter{}
 	filterBytes, _ := json.Marshal(filter)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte(GetMapIDs), filterBytes})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetMapIDs), filterBytes})
 	if res.Status == shim.ERROR {
 		if string(res.Message) != "Not Implemented" {
 			t.FailNow()
@@ -160,7 +162,7 @@ func TestPop_GetLinkDoesNotExist(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
-	res := stub.MockInvoke("1", [][]byte{[]byte(GetLink), []byte("")})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetLink), []byte("")})
 	if res.Payload != nil {
 		fmt.Println("GetLink should return nil")
 		t.FailNow()
@@ -171,16 +173,16 @@ func TestPop_SaveValue(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
-	checkInvoke(t, stub, [][]byte{[]byte("SaveValue"), []byte("key"), []byte("value")})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.SaveValue), []byte("key"), []byte("value")})
 
-	payload := checkQuery(t, stub, [][]byte{[]byte("GetValue"), []byte("key")})
+	payload := checkQuery(t, stub, [][]byte{[]byte(pc.GetValue), []byte("key")})
 	if string(payload) != "value" {
 		fmt.Println("Could not find saved value")
 		t.FailNow()
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte("DeleteValue"), []byte("key")})
-	res := stub.MockInvoke("1", [][]byte{[]byte("GetValue"), []byte("key")})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.DeleteValue), []byte("key")})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetValue), []byte("key")})
 	if res.Payload != nil {
 		fmt.Println("DeleteValue failed")
 		t.FailNow()

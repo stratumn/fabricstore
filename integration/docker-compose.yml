@@ -116,6 +116,7 @@ services:
       - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto
       - ./channel-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/config
       - $GOPATH/src/github.com/stratumn/fabricstore/vendor/github.com/:/opt/gopath/src/github.com
+      - $GOPATH/src/github.com/stratumn/fabricstore/:/opt/gopath/src/github.com/stratumn/fabricstore
       - $GOPATH/src/github.com/stratumn/fabricstore/chaincode/pop/:/opt/gopath/src/github.com/pop
     depends_on:
       - orderer.example.com
