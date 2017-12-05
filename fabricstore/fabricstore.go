@@ -160,16 +160,6 @@ func (f *FabricStore) GetInfo() (interface{}, error) {
 
 // SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
 func (f *FabricStore) SaveSegment(segment *cs.Segment) error {
-	// segmentBytes, _ := json.Marshal(segment)
-
-	// _, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
-	// 	ChaincodeID: f.config.ChaincodeID,
-	// 	Fcn:         "SaveSegment",
-	// 	Args:        [][]byte{segmentBytes},
-	// })
-
-	// return err
-
 	linkHash, err := f.CreateLink(&segment.Link)
 	if err != nil {
 		return err
@@ -221,13 +211,7 @@ func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 		return nil, err
 	}
 
-	segment := &cs.Segment{
-		Link: link,
-	}
-
-	// AddEvidences to Segment
-
-	return segment, nil
+	return f.buildSegment(link)
 }
 
 // DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
@@ -278,13 +262,9 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 	}
 
 	for _, link := range links {
-		segment := &cs.Segment{
-			Link: link,
-		}
+		segment, _ := f.buildSegment(link)
 		segmentSlice = append(segmentSlice, segment)
 	}
-
-	// Add evidences to segments
 
 	// This should be removed once limit and skip are implemented in fabric/couchDB
 	segmentSlice = filter.Pagination.PaginateSegments(segmentSlice)
@@ -384,13 +364,29 @@ func (f *FabricStore) onBlock(block *common.Block) {
 			if err := json.Unmarshal(tx.Args[0], &link); err != nil {
 				panic(err)
 			}
-			segment := &cs.Segment{
-				Link: link,
-			}
+
+			segment, _ := f.buildSegment(link)
+
 			for _, c := range f.didSaveChans {
 				c <- segment
 			}
-			// TODO Generate evidence and call f.AddEvidence
 		}
 	}
+}
+
+func (f *FabricStore) buildSegment(link cs.Link) (*cs.Segment, error) {
+	linkHash, err := link.HashString()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO add evidences
+
+	return &cs.Segment{
+		Link: link,
+		Meta: cs.SegmentMeta{
+			Evidences: []*cs.Evidence{},
+			LinkHash:  linkHash,
+		},
+	}, nil
 }

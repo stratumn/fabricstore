@@ -156,22 +156,6 @@ func TestPop_GetMapIDs(t *testing.T) {
 	}
 }
 
-// func TestPop_SaveSegmentIncorrect(t *testing.T) {
-// 	cc := new(SmartContract)
-// 	stub := shim.NewMockStub("pop", cc)
-
-// 	res := stub.MockInvoke("1", [][]byte{[]byte("SaveSegment"), []byte("")})
-// 	if res.Status != shim.ERROR {
-// 		fmt.Println("SaveSegment should have failed")
-// 		t.FailNow()
-// 	} else {
-// 		if res.Message != "Could not parse segment" {
-// 			fmt.Println("Failed with error", res.Message, "expected", "Could not parse segment")
-// 			t.FailNow()
-// 		}
-// 	}
-// }
-
 func TestPop_GetLinkDoesNotExist(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
