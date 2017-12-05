@@ -314,6 +314,11 @@ func (f *FabricStore) NewBatch() (store.Batch, error) {
 	return NewBatch(f), nil
 }
 
+// NewBatchV2 implements github.com/stratumn/sdk/store.AdapterV2.NewBatchV2.
+func (f *FabricStore) NewBatchV2() (store.BatchV2, error) {
+	return nil, nil
+}
+
 // SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
 func (f *FabricStore) SaveValue(key, value []byte) error {
 	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
