@@ -38,16 +38,11 @@ import (
 )
 
 // NewTestClient returns a unit test FabricStore
-func NewTestClient() *FabricStore {
-	config := Config{
-		ChannelID:   "mychannel",
-		ChaincodeID: "pop",
-		Version:     "0.1.0",
-		Commit:      "00000000000000000000000000000000",
-	}
+func NewTestClient(evidenceStore store.EvidenceStore, config *Config) *FabricStore {
 	s := FabricStore{
 		channelClient: &MockClient{},
-		config:        &config,
+		config:        config,
+		evidenceStore: evidenceStore,
 	}
 	return &s
 }

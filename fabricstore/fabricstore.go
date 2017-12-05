@@ -59,8 +59,10 @@ type Config struct {
 
 // FabricStore is the type that implements github.com/stratumn/sdk/store.Adapter.
 type FabricStore struct {
-	config       *Config
-	didSaveChans []chan *cs.Segment
+	config        *Config
+	evidenceStore store.EvidenceStore
+	didSaveChans  []chan *cs.Segment
+	eventChans    []chan *store.Event
 
 	// client is the client connection to the organization.
 	client fab.FabricClient
@@ -85,7 +87,7 @@ type Info struct {
 }
 
 // New creates a new instance of FabricStore
-func New(config *Config) (*FabricStore, error) {
+func New(e store.EvidenceStore, config *Config) (*FabricStore, error) {
 	sdkOptions := fabapi.Options{
 		ConfigFile: config.ConfigFile,
 	}
@@ -127,6 +129,7 @@ func New(config *Config) (*FabricStore, error) {
 
 	adapter := &FabricStore{
 		config:        config,
+		evidenceStore: e,
 		client:        client,
 		channelClient: channelClient,
 		channel:       channel,
@@ -145,6 +148,11 @@ func New(config *Config) (*FabricStore, error) {
 // github.com/stratumn/sdk/fossilizer.Store.AddDidSaveChannel.
 func (f *FabricStore) AddDidSaveChannel(saveChan chan *cs.Segment) {
 	f.didSaveChans = append(f.didSaveChans, saveChan)
+}
+
+// AddStoreEventChannel implements github.com/stratumn/sdk/store.AdapterV2.AddStoreEventChannel
+func (f *FabricStore) AddStoreEventChannel(eventChan chan *store.Event) {
+	f.eventChans = append(f.eventChans, eventChan)
 }
 
 // GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
@@ -235,12 +243,12 @@ func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segmen
 
 // AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
 func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
-	return nil
+	return f.evidenceStore.AddEvidence(linkHash, evidence)
 }
 
 // GetEvidences implements github.com/stratumn/sdk/store.EvidenceReader.GetEvidences.
 func (f *FabricStore) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, error) {
-	return nil, nil
+	return f.evidenceStore.GetEvidences(linkHash)
 }
 
 // FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
@@ -365,28 +373,40 @@ func (f *FabricStore) onBlock(block *common.Block) {
 				panic(err)
 			}
 
+			// TODO generate new fabricstore evidence
+
 			segment, _ := f.buildSegment(link)
 
 			for _, c := range f.didSaveChans {
 				c <- segment
+			}
+
+			for _, c := range f.eventChans {
+				c <- &store.Event{
+					EventType: store.SavedLink,
+					Details:   link,
+				}
 			}
 		}
 	}
 }
 
 func (f *FabricStore) buildSegment(link cs.Link) (*cs.Segment, error) {
-	linkHash, err := link.HashString()
+	linkHash, err := link.Hash()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO add evidences
+	evidences, err := f.GetEvidences(linkHash)
+	if err != nil {
+		return nil, err
+	}
 
 	return &cs.Segment{
 		Link: link,
 		Meta: cs.SegmentMeta{
-			Evidences: []*cs.Evidence{},
-			LinkHash:  linkHash,
+			Evidences: *evidences,
+			LinkHash:  linkHash.String(),
 		},
 	}, nil
 }

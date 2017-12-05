@@ -23,6 +23,7 @@ import (
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/filestore"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
 
@@ -47,7 +48,7 @@ var (
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	mockFabricstore = NewTestClient()
+
 	config = &Config{
 		ChannelID:   *channelID,
 		ChaincodeID: *chaincodeID,
@@ -55,6 +56,17 @@ func TestMain(m *testing.M) {
 		Version:     version,
 		Commit:      commit,
 	}
+
+	evidenceStore, err := filestore.New(&filestore.Config{
+		Version: "0",
+		Commit:  "0",
+		Path:    "/Users/pierre/Documents/work",
+	})
+	if err != nil {
+		os.Exit(1)
+	}
+
+	mockFabricstore = NewTestClient(evidenceStore, config)
 
 	var result int
 
@@ -74,7 +86,7 @@ func TestMain(m *testing.M) {
 		case success := <-status:
 			if success == true {
 				fmt.Println("Successfully started network, starting client")
-				fabricstore, err = New(config)
+				fabricstore, err = New(evidenceStore, config)
 				if err != nil {
 					fmt.Println("Could not initiate client, stopping network")
 					StopNetwork()
