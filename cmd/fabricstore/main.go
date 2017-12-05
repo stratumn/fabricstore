@@ -59,7 +59,7 @@ func main() {
 		Path: *path,
 	})
 	if err != nil {
-		log.Fatalf("Could not start locla storage: %v", err)
+		log.Fatalf("Could not start local storage: %v", err)
 	}
 
 	a, err := fabricstore.New(evidenceStore, &fabricstore.Config{
