@@ -17,6 +17,7 @@ package fabricstore
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -57,10 +58,15 @@ func TestMain(m *testing.M) {
 		Commit:      commit,
 	}
 
+	path, err := ioutil.TempDir("", "filestore")
+	if err != nil {
+		os.Exit(1)
+	}
+
 	evidenceStore, err := filestore.New(&filestore.Config{
 		Version: "0",
 		Commit:  "0",
-		Path:    "/Users/pierre/Documents/work",
+		Path:    path,
 	})
 	if err != nil {
 		os.Exit(1)
@@ -115,6 +121,7 @@ func TestMain(m *testing.M) {
 		result = m.Run()
 	}
 
+	os.RemoveAll(path)
 	os.Exit(result)
 }
 
