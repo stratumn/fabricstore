@@ -38,7 +38,6 @@ type SmartContract struct {
 
 // ObjectType used in CouchDB documents
 const (
-	// ObjectTypeSegment = "segment"
 	ObjectTypeMap   = "map"
 	ObjectTypeValue = "value"
 	ObjectTypeLink  = "link"
@@ -212,7 +211,7 @@ func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, link *cs.Link)
 	return stub.PutState(mapDoc.ID, mapDocBytes)
 }
 
-// CreateLink persits Link to blockchain.
+// CreateLink persists Link to blockchain.
 func (s *SmartContract) CreateLink(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	byteArgs := stub.GetArgs()
 	link := &cs.Link{}

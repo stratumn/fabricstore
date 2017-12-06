@@ -86,26 +86,29 @@ func TestPop_CreateLink(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
-	segment := cstesting.RandomSegment()
+	link := cstesting.RandomLink()
+	delete(link.Meta, "prevLinkHash")
+	linkHashString, err := link.HashString()
+	if err != nil {
+		t.Logf(err.Error())
+		t.FailNow()
+	}
 
-	delete(segment.Link.Meta, "prevLinkHash")
-	segment.SetLinkHash()
+	createLink(t, stub, link)
 
-	createLink(t, stub, &segment.Link)
-
-	payload := checkQuery(t, stub, [][]byte{[]byte(pc.GetLink), []byte(segment.GetLinkHashString())})
+	payload := checkQuery(t, stub, [][]byte{[]byte(pc.GetLink), []byte(linkHashString)})
 	savedLink := &cs.Link{}
 	json.Unmarshal(payload, savedLink)
 
-	linkBytes, _ := json.Marshal(segment.Link)
+	linkBytes, _ := json.Marshal(link)
 
 	if string(linkBytes) != string(payload) {
 		fmt.Println("Link not saved into database")
 		t.FailNow()
 	}
 
-	checkInvoke(t, stub, [][]byte{[]byte(pc.DeleteLink), []byte(segment.GetLinkHashString())})
-	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetLink), []byte(segment.GetLinkHashString())})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.DeleteLink), []byte(linkHashString)})
+	res := stub.MockInvoke("1", [][]byte{[]byte(pc.GetLink), []byte(linkHashString)})
 	if res.Payload != nil {
 		fmt.Println("DeleteLink failed")
 		t.FailNow()
