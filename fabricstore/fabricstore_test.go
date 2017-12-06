@@ -17,12 +17,14 @@ package fabricstore
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/cs/cstesting"
+	"github.com/stratumn/sdk/filestore"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
 
@@ -47,7 +49,7 @@ var (
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	mockFabricstore = NewTestClient()
+
 	config = &Config{
 		ChannelID:   *channelID,
 		ChaincodeID: *chaincodeID,
@@ -55,6 +57,20 @@ func TestMain(m *testing.M) {
 		Version:     version,
 		Commit:      commit,
 	}
+
+	path, err := ioutil.TempDir("", "filestore")
+	if err != nil {
+		os.Exit(1)
+	}
+
+	evidenceStore, err := filestore.New(&filestore.Config{
+		Path: path,
+	})
+	if err != nil {
+		os.Exit(1)
+	}
+
+	mockFabricstore = NewTestClient(evidenceStore, config)
 
 	var result int
 
@@ -74,7 +90,7 @@ func TestMain(m *testing.M) {
 		case success := <-status:
 			if success == true {
 				fmt.Println("Successfully started network, starting client")
-				fabricstore, err = New(config)
+				fabricstore, err = New(evidenceStore, config)
 				if err != nil {
 					fmt.Println("Could not initiate client, stopping network")
 					StopNetwork()
@@ -103,6 +119,7 @@ func TestMain(m *testing.M) {
 		result = m.Run()
 	}
 
+	os.RemoveAll(path)
 	os.Exit(result)
 }
 
@@ -135,6 +152,7 @@ func Test_GetSegment(t *testing.T) {
 	segment := cstesting.RandomSegment()
 	_, err := mockFabricstore.GetSegment(segment.GetLinkHash())
 	if err != nil {
+		t.Logf(err.Error())
 		t.FailNow()
 	}
 }
@@ -143,6 +161,7 @@ func Test_DeleteSegment(t *testing.T) {
 	segment := cstesting.RandomSegment()
 	_, err := mockFabricstore.DeleteSegment(segment.GetLinkHash())
 	if err != nil {
+		t.Logf(err.Error())
 		t.FailNow()
 	}
 }

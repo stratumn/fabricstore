@@ -18,10 +18,12 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stratumn/fabricstore/fabricstore"
+	"github.com/stratumn/sdk/filestore"
 	"github.com/stratumn/sdk/store/storehttp"
 )
 
@@ -29,6 +31,7 @@ var (
 	channelID   = flag.String("channelID", os.Getenv("CHANNEL_ID"), "channelID")
 	chaincodeID = flag.String("chaincodeID", os.Getenv("CHAINCODE_ID"), "chaincodeID")
 	configFile  = flag.String("configFile", os.Getenv("CLIENT_CONFIG_PATH"), "Absolute path to network config file")
+	path        = flag.String("path", os.Getenv("LOCALSTORAGE_PATH"), "Path used for local storage")
 	version     = "0.1.0"
 	commit      = "00000000000000000000000000000000"
 )
@@ -41,7 +44,25 @@ func main() {
 	flag.Parse()
 	log.Infof("%s v%s@%s", fabricstore.Description, version, commit[:7])
 
-	a, err := fabricstore.New(&fabricstore.Config{
+	localPath := *path
+
+	if localPath == "" {
+		var err error
+
+		localPath, err = ioutil.TempDir("", "filestore")
+		if err != nil {
+			log.Fatalf("Could not create local temp file for local storage: %v", err)
+		}
+	}
+
+	evidenceStore, err := filestore.New(&filestore.Config{
+		Path: *path,
+	})
+	if err != nil {
+		log.Fatalf("Could not start local storage: %v", err)
+	}
+
+	a, err := fabricstore.New(evidenceStore, &fabricstore.Config{
 		ChannelID:   *channelID,
 		ChaincodeID: *chaincodeID,
 		ConfigFile:  *configFile,

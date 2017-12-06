@@ -34,20 +34,17 @@ import (
 	"github.com/stratumn/sdk/testutil"
 	"github.com/stratumn/sdk/types"
 
+	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
+
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 // NewTestClient returns a unit test FabricStore
-func NewTestClient() *FabricStore {
-	config := Config{
-		ChannelID:   "mychannel",
-		ChaincodeID: "pop",
-		Version:     "0.1.0",
-		Commit:      "00000000000000000000000000000000",
-	}
+func NewTestClient(evidenceStore store.EvidenceStore, config *Config) *FabricStore {
 	s := FabricStore{
 		channelClient: &MockClient{},
-		config:        &config,
+		config:        config,
+		evidenceStore: evidenceStore,
 	}
 	return &s
 }
@@ -58,18 +55,18 @@ type MockClient struct{}
 // ExecuteTx execute transaction
 func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.TransactionID, err error) {
 	switch req.Fcn {
-	case "SaveSegment":
+	case pc.CreateLink:
 		err = nArgsError(1, req.Args)
 		if err != nil {
 			return
 		}
 
-		segment := &cs.Segment{}
-		err = json.Unmarshal(req.Args[0], segment)
+		link := &cs.Link{}
+		err = json.Unmarshal(req.Args[0], link)
 		if err != nil {
 			return
 		}
-	case "DeleteSegment":
+	case pc.DeleteLink:
 		err = nArgsError(1, req.Args)
 		if err != nil {
 			return
@@ -79,7 +76,7 @@ func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.Transact
 		if err != nil {
 			return
 		}
-	case "SaveValue":
+	case pc.SaveValue:
 		err = nArgsError(2, req.Args)
 		if err != nil {
 			return
@@ -87,7 +84,7 @@ func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.Transact
 		if len(req.Args) != 2 {
 			err = errors.New("Expected exactly 2 arguments")
 		}
-	case "DeleteValue":
+	case pc.DeleteValue:
 		err = nArgsError(1, req.Args)
 		if err != nil {
 			return
@@ -109,17 +106,17 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 	}
 
 	switch req.Fcn {
-	case "GetSegment":
+	case pc.GetLink:
 		_, err = types.NewBytes32FromString(string(req.Args[0]))
 		if err != nil {
 			return
 		}
 
 		segment := cstesting.RandomSegment()
-		result, err = json.Marshal(segment)
+		result, err = json.Marshal(segment.Link)
 
 		return
-	case "FindSegments":
+	case pc.FindLinks:
 		segmentFilter := &store.SegmentFilter{}
 		err = json.Unmarshal(req.Args[0], segmentFilter)
 		if err != nil {
@@ -127,11 +124,11 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 		}
 
 		segment := cstesting.RandomSegment()
-		segments := cs.SegmentSlice{segment}
-		result, err = json.Marshal(segments)
+		links := []cs.Link{segment.Link}
+		result, err = json.Marshal(links)
 
 		return
-	case "GetMapIDs":
+	case pc.GetMapIDs:
 		mapFilter := &store.MapFilter{}
 		err = json.Unmarshal(req.Args[0], mapFilter)
 		if err != nil {
@@ -145,7 +142,7 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 		result, err = json.Marshal(mapIDs)
 
 		return
-	case "GetValue":
+	case pc.GetValue:
 		result = []byte("value")
 		return
 	}
