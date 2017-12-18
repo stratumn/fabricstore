@@ -1,6 +1,6 @@
 # Stratumn Fabricstore
 
-fabricstore implements [stratumn/sdk/store.Adapter](https://github.com/stratumn/sdk/blob/master/store/store.go) interface and allows the deployment of an Indigo node using a Hyperledger Fabric back end.
+fabricstore implements [stratumn/sdk/store.Adapter](https://github.com/stratumn/sdk/blob/master/store/store.go) interface and allows the deployment of an [Indigo](https://indigoframework.com) node using a Hyperledger Fabric back end.
 
 ### Deployment
 
