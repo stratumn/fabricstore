@@ -27,6 +27,7 @@ import (
 
 	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
 
+	"github.com/stratumn/sdk/bufferedbatch"
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/store"
 	"github.com/stratumn/sdk/types"
@@ -64,7 +65,6 @@ type Config struct {
 type FabricStore struct {
 	config        *Config
 	evidenceStore store.EvidenceStore
-	didSaveChans  []chan *cs.Segment
 	eventChans    []chan *store.Event
 
 	// client is the client connection to the organization.
@@ -147,13 +147,7 @@ func New(e store.EvidenceStore, config *Config) (*FabricStore, error) {
 	return adapter, nil
 }
 
-// AddDidSaveChannel implements
-// github.com/stratumn/sdk/fossilizer.Store.AddDidSaveChannel.
-func (f *FabricStore) AddDidSaveChannel(saveChan chan *cs.Segment) {
-	f.didSaveChans = append(f.didSaveChans, saveChan)
-}
-
-// AddStoreEventChannel implements github.com/stratumn/sdk/store.AdapterV2.AddStoreEventChannel
+// AddStoreEventChannel implements github.com/stratumn/sdk/store.Adapter.AddStoreEventChannel
 func (f *FabricStore) AddStoreEventChannel(eventChan chan *store.Event) {
 	f.eventChans = append(f.eventChans, eventChan)
 }
@@ -167,22 +161,6 @@ func (f *FabricStore) GetInfo() (interface{}, error) {
 		Version:       f.config.Version,
 		Commit:        f.config.Commit,
 	}, nil
-}
-
-// SaveSegment implements github.com/stratumn/sdk/store.Adapter.SaveSegment.
-func (f *FabricStore) SaveSegment(segment *cs.Segment) error {
-	linkHash, err := f.CreateLink(&segment.Link)
-	if err != nil {
-		return err
-	}
-
-	for _, evidence := range segment.Meta.Evidences {
-		if err := f.AddEvidence(linkHash, evidence); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
@@ -202,7 +180,7 @@ func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 	return linkHash, nil
 }
 
-// GetSegment implements github.com/stratumn/sdk/store.Adapter.GetSegment.
+// GetSegment implements github.com/stratumn/sdk/store.SegmentReader.GetSegment.
 func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
@@ -225,25 +203,6 @@ func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 	return f.buildSegment(link)
 }
 
-// DeleteSegment implements github.com/stratumn/sdk/store.Adapter.DeleteSegment.
-func (f *FabricStore) DeleteSegment(linkHash *types.Bytes32) (segment *cs.Segment, err error) {
-	segment, err = f.GetSegment(linkHash)
-	if err != nil {
-		return
-	}
-
-	_, err = f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
-		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         pc.DeleteLink,
-		Args:        [][]byte{[]byte(linkHash.String())},
-	})
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 // AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
 func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
 	return f.evidenceStore.AddEvidence(linkHash, evidence)
@@ -254,7 +213,7 @@ func (f *FabricStore) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, erro
 	return f.evidenceStore.GetEvidences(linkHash)
 }
 
-// FindSegments implements github.com/stratumn/sdk/store.Adapter.FindSegments.
+// FindSegments implements github.com/stratumn/sdk/store.SegmentReader.FindSegments.
 func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
@@ -285,7 +244,7 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 	return
 }
 
-// GetMapIDs implements github.com/stratumn/sdk/store.Adapter.GetMapIDs.
+// GetMapIDs implements github.com/stratumn/sdk/store.SegmentReader.GetMapIDs.
 func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
@@ -311,16 +270,11 @@ func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err erro
 
 // NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.
 func (f *FabricStore) NewBatch() (store.Batch, error) {
-	return NewBatch(f), nil
+	return bufferedbatch.NewBatch(f), nil
 }
 
-// NewBatchV2 implements github.com/stratumn/sdk/store.AdapterV2.NewBatchV2.
-func (f *FabricStore) NewBatchV2() (store.BatchV2, error) {
-	return nil, nil
-}
-
-// SaveValue implements github.com/stratumn/sdk/store.Adapter.SaveValue.
-func (f *FabricStore) SaveValue(key, value []byte) error {
+// SetValue implements github.com/stratumn/sdk/store.KeyValueWriter.SetValue.
+func (f *FabricStore) SetValue(key, value []byte) error {
 	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         pc.SaveValue,
@@ -330,7 +284,7 @@ func (f *FabricStore) SaveValue(key, value []byte) error {
 	return err
 }
 
-// GetValue implements github.com/stratumn/sdk/store.Adapter.GetValue.
+// GetValue implements github.com/stratumn/sdk/store.KeyValueReader.GetValue.
 func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
@@ -344,7 +298,7 @@ func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
 	return response, nil
 }
 
-// DeleteValue implements github.com/stratumn/sdk/store.Adapter.DeleteValue.
+// DeleteValue implements github.com/stratumn/sdk/store.KeyValueWriter.DeleteValue.
 func (f *FabricStore) DeleteValue(key []byte) (value []byte, err error) {
 	value, err = f.GetValue(key)
 	if err != nil {
@@ -384,17 +338,10 @@ func (f *FabricStore) onBlock(block *common.Block) {
 			}
 
 			// TODO generate new fabricstore evidence
-
-			segment, _ := f.buildSegment(link)
-
-			for _, c := range f.didSaveChans {
-				c <- segment
-			}
-
 			for _, c := range f.eventChans {
 				c <- &store.Event{
-					EventType: store.SavedLink,
-					Details:   link,
+					EventType: store.SavedLinks,
+					Data:      link,
 				}
 			}
 		}

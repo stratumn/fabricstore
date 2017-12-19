@@ -97,6 +97,36 @@
   version = "v1.0.3"
 
 [[projects]]
+  name = "github.com/go-kit/kit"
+  packages = ["log","log/level","log/term"]
+  revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
+  version = "v0.6.0"
+
+[[projects]]
+  name = "github.com/go-logfmt/logfmt"
+  packages = ["."]
+  revision = "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
+  version = "v0.3.0"
+
+[[projects]]
+  name = "github.com/go-playground/locales"
+  packages = [".","currency"]
+  revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
+  version = "v0.11.2"
+
+[[projects]]
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
+
+[[projects]]
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  revision = "259ab82a6cad3992b4e21ff5cac294ccb06474bc"
+  version = "v1.7.0"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
@@ -107,6 +137,12 @@
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/empty","ptypes/timestamp"]
   revision = "1643683e1b54a9e88ad26d98f81400c8c9d9f4f9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
   branch = "master"
@@ -151,10 +187,22 @@
   revision = "aafbea28037ef0f2e8c1d3bbef42671d5525e81a"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jmhodges/levigo"
+  packages = ["."]
+  revision = "c42d9e0ca023e2198120196f842701bb4c55d7b9"
+
+[[projects]]
   name = "github.com/julienschmidt/httprouter"
   packages = ["."]
   revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
   version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kr/logfmt"
+  packages = ["."]
+  revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
   branch = "master"
@@ -253,8 +301,20 @@
 
 [[projects]]
   name = "github.com/stratumn/sdk"
-  packages = ["bufferedbatch","cs","cs/cstesting","jsonhttp","jsonws","store","store/storehttp","testutil","types"]
-  revision = "e9fcf645dac81efb3130c9ca88eaa2d897c41b71"
+  packages = ["bufferedbatch","cs","cs/cstesting","filestore","jsonhttp","jsonws","leveldbstore","store","store/storehttp","testutil","types"]
+  revision = "master"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/syndtr/goleveldb"
+  packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
+  revision = "34011bf325bce385408353a30b101fe5e923eb6e"
+
+[[projects]]
+  name = "github.com/tendermint/tmlibs"
+  packages = ["common","db","log"]
+  revision = "b854baa1fce7101c90b1d301b3359bb412f981c0"
+  version = "v0.4.1"
 
 [[projects]]
   branch = "master"
@@ -322,6 +382,12 @@
   version = "v1.7.1"
 
 [[projects]]
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  revision = "b1f51f36f1c98cc97f777d6fc9d4b05eaa0cabb5"
+  version = "v9.9.1"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -330,6 +396,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7c80aa024a875c951343c591221937746c31fba2d8c2da65c95d9b734ca782df"
+  inputs-digest = "9aa8d82fd25b7d106794b237670d0ec534b821ab241f613750d458ed7f26e75e"
   solver-name = "gps-cdcl"
   solver-version = 1
