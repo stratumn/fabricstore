@@ -5,6 +5,10 @@ services:
 go:
   - 1.9
   - tip
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: tip
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
