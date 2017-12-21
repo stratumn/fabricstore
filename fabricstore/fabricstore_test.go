@@ -33,16 +33,17 @@ import (
 )
 
 var (
-	fabricstore     *FabricStore
-	mockFabricstore *FabricStore
-	config          *Config
-	process         string
-	integration     = flag.Bool("integration", false, "Run integration tests")
-	channelID       = flag.String("channelID", "mychannel", "channelID")
-	chaincodeID     = flag.String("chaincodeID", "pop", "chaincodeID")
-	configFile      = flag.String("configFile", os.Getenv("GOPATH")+"/src/github.com/stratumn/fabricstore/integration/client-config/client-config.yaml", "Absolute path to network config file")
-	version         = "0.1.0"
-	commit          = "00000000000000000000000000000000"
+	fabricstore       *FabricStore
+	mockFabricstore   *FabricStore
+	config            *Config
+	process           string
+	defaultPagination = store.Pagination{Offset: 0, Limit: 20}
+	integration       = flag.Bool("integration", false, "Run integration tests")
+	channelID         = flag.String("channelID", "mychannel", "channelID")
+	chaincodeID       = flag.String("chaincodeID", "pop", "chaincodeID")
+	configFile        = flag.String("configFile", os.Getenv("GOPATH")+"/src/github.com/stratumn/fabricstore/integration/client-config/client-config.yaml", "Absolute path to network config file")
+	version           = "0.1.0"
+	commit            = "00000000000000000000000000000000"
 )
 
 func TestMain(m *testing.M) {
@@ -153,7 +154,7 @@ func Test_GetSegment(t *testing.T) {
 }
 
 func Test_FindSegments(t *testing.T) {
-	segmentFilter := &store.SegmentFilter{}
+	segmentFilter := &store.SegmentFilter{Pagination: defaultPagination}
 	segmentSlice, err := mockFabricstore.FindSegments(segmentFilter)
 	assert.NoError(t, err, "FindSegments should work")
 	assert.NotEmpty(t, segmentSlice, "FindSegments should return several segments")
@@ -257,10 +258,8 @@ func Test_FindSegmentsIntegration(t *testing.T) {
 	process = link1.GetProcess()
 
 	segmentFilter := &store.SegmentFilter{
-		MapIDs: []string{link1.GetMapID()},
-		Pagination: store.Pagination{
-			Limit: 20,
-		},
+		MapIDs:     []string{link1.GetMapID()},
+		Pagination: defaultPagination,
 	}
 
 	segments, err := fabricstore.FindSegments(segmentFilter)
@@ -279,10 +278,8 @@ func Test_GetMapIDsIntegration(t *testing.T) {
 	}
 
 	mapFilter := &store.MapFilter{
-		Process: process,
-		Pagination: store.Pagination{
-			Limit: 20,
-		},
+		Process:    process,
+		Pagination: defaultPagination,
 	}
 
 	mapIds, err := fabricstore.GetMapIDs(mapFilter)
@@ -294,7 +291,6 @@ func Test_AddStoreEventChannelIntegration(t *testing.T) {
 	if !*integration {
 		return
 	}
-	panic("duh")
 
 	c := make(chan *store.Event)
 	fabricstore.AddStoreEventChannel(c)

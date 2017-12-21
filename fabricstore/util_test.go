@@ -76,7 +76,7 @@ func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.Transact
 		if err != nil {
 			return
 		}
-	case pc.SaveValue:
+	case pc.SetValue:
 		err = nArgsError(2, req.Args)
 		if err != nil {
 			return

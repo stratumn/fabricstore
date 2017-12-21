@@ -277,7 +277,7 @@ func (f *FabricStore) NewBatch() (store.Batch, error) {
 func (f *FabricStore) SetValue(key, value []byte) error {
 	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
-		Fcn:         pc.SaveValue,
+		Fcn:         pc.SetValue,
 		Args:        [][]byte{key, value},
 	})
 
@@ -338,11 +338,9 @@ func (f *FabricStore) onBlock(block *common.Block) {
 			}
 
 			// TODO generate new fabricstore evidence
+			evt := store.NewSavedLinks(&link)
 			for _, c := range f.eventChans {
-				c <- &store.Event{
-					EventType: store.SavedLinks,
-					Data:      link,
-				}
+				c <- evt
 			}
 		}
 	}

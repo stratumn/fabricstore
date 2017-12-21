@@ -30,9 +30,9 @@ GITHUB_RELEASE_FLAGS=--user '$(GITHUB_USER)' --repo '$(GITHUB_REPO)' --tag '$(GI
 GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --description "$$(cat $(RELEASE_NOTES_FILE))"
 
 GO_LIST=$(GO_CMD) list
-GO_BUILD=$(GO_CMD) build -v -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-extldflags "-static" -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X github.com/stratumn/sdk/strat/cmd.DefaultGeneratorsRef=$(GENERATOR_VERSION)'
+GO_BUILD=$(GO_CMD) build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-extldflags "-static" -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X github.com/stratumn/sdk/strat/cmd.DefaultGeneratorsRef=$(GENERATOR_VERSION)'
 GO_TEST=$(GO_CMD) test
-GO_TEST_FLAG=
+GO_TEST_FLAG?=-integration
 GO_BENCHMARK=$(GO_TEST) -bench .
 GO_LINT=$(GO_LINT_CMD) -set_exit_status
 KEYBASE_SIGN=$(KEYBASE_CMD) pgp sign
@@ -77,14 +77,14 @@ release: test lint clean build git_tag github_draft github_upload github_publish
 test: $(TEST_LIST)
 
 $(TEST_LIST): test_%:
-	@$(GO_TEST) $* -integration
+	@$(GO_TEST) $* $(GO_TEST_FLAG)
 
 # == coverage =================================================================
 coverage: $(COVERAGE_FILE)
 
 $(COVERAGE_FILE): $(COVERAGE_SOURCES)
 	@for d in $(TEST_PACKAGES); do \
-	    $(GO_TEST) -coverprofile=profile.out -covermode=atomic $$d -integration || exit 1; \
+	    $(GO_TEST) -coverprofile=profile.out -covermode=atomic $$d $(GO_TEST_FLAG) || exit 1; \
 	    if [ -f profile.out ]; then \
 	        cat profile.out >> $(COVERAGE_FILE); \
 	        rm profile.out; \
@@ -94,7 +94,7 @@ $(COVERAGE_FILE): $(COVERAGE_SOURCES)
 coverhtml:
 	echo 'mode: set' > $(COVERHTML_FILE)
 	@for d in $(TEST_PACKAGES); do \
-	    $(GO_TEST) -coverprofile=profile.out $$d -integration || exit 1; \
+	    $(GO_TEST) -coverprofile=profile.out $$d $(GO_TEST_FLAG) || exit 1; \
 	    if [ -f profile.out ]; then \
 	        tail -n +2 profile.out >> $(COVERHTML_FILE); \
 	        rm profile.out; \

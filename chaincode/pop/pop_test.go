@@ -172,15 +172,15 @@ func TestPop_GetLinkDoesNotExist(t *testing.T) {
 	}
 }
 
-func TestPop_SaveValue(t *testing.T) {
+func TestPop_SetValue(t *testing.T) {
 	cc := new(SmartContract)
 	stub := shim.NewMockStub("pop", cc)
 
-	checkInvoke(t, stub, [][]byte{[]byte(pc.SaveValue), []byte("key"), []byte("value")})
+	checkInvoke(t, stub, [][]byte{[]byte(pc.SetValue), []byte("key"), []byte("value")})
 
 	payload := checkQuery(t, stub, [][]byte{[]byte(pc.GetValue), []byte("key")})
 	if string(payload) != "value" {
-		fmt.Println("Could not find saved value")
+		fmt.Println("Could not find set value")
 		t.FailNow()
 	}
 
