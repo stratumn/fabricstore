@@ -20,11 +20,14 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stratumn/fabricstore/fabricstore"
 	"github.com/stratumn/sdk/filestore"
 	"github.com/stratumn/sdk/store/storehttp"
+
+	"github.com/stratumn/fabricstore/util"
 )
 
 var (
@@ -62,13 +65,27 @@ func main() {
 		log.Fatalf("Could not start local storage: %v", err)
 	}
 
-	a, err := fabricstore.New(evidenceStore, &fabricstore.Config{
-		ChannelID:   *channelID,
-		ChaincodeID: *chaincodeID,
-		ConfigFile:  *configFile,
-		Version:     version,
-		Commit:      commit,
-	})
+	var a *fabricstore.FabricStore
+	var storeErr error
+
+	err = util.Retry(func(attempt int) (retry bool, err error) {
+		a, storeErr = fabricstore.New(evidenceStore, &fabricstore.Config{
+			ChannelID:   *channelID,
+			ChaincodeID: *chaincodeID,
+			ConfigFile:  *configFile,
+			Version:     version,
+			Commit:      commit,
+		})
+
+		if storeErr != nil {
+			log.Infof("Unable to connect to fabric network (%v). Retrying in 5s.", storeErr.Error())
+			time.Sleep(5 * time.Second)
+			return true, storeErr
+		}
+
+		return false, storeErr
+	}, 12)
+
 	if err != nil {
 		log.Fatalf("Could not start fabric client: %v", err)
 	}
