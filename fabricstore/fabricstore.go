@@ -338,6 +338,7 @@ func (f *FabricStore) onBlock(block *common.Block) {
 			}
 
 			// TODO generate new fabricstore evidence
+
 			evt := store.NewSavedLinks(&link)
 			for _, c := range f.eventChans {
 				c <- evt

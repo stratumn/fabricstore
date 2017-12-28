@@ -294,25 +294,19 @@ func Test_AddStoreEventChannelIntegration(t *testing.T) {
 
 	c := make(chan *store.Event)
 	fabricstore.AddStoreEventChannel(c)
-	// Purge events
-	for {
-		select {
-		case <-c:
-			continue
-		default:
-			break
-		}
-	}
 
 	link := cstesting.RandomLink()
 	linkHash, _ := link.HashString()
+
 	_, err := fabricstore.CreateLink(link)
 	assert.NoError(t, err, "CreateLink should work")
 
 	event := <-c
 	assert.Equal(t, store.SavedLinks, event.EventType, "CreateLink should send a SavedLinkEvent")
-	link, ok := event.Data.(*cs.Link)
-	assert.True(t, ok, "SavedLinks should contain a Link")
-	retLinkHash, _ := link.HashString()
+	links, ok := event.Data.([]*cs.Link)
+
+	assert.True(t, ok, "SavedLinks should contain a []*cs.Link")
+	assert.Equal(t, 1, len(links))
+	retLinkHash, _ := links[0].HashString()
 	assert.Equal(t, linkHash, retLinkHash, "CreateLink should send a SavedLinkEvent")
 }

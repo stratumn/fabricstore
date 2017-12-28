@@ -312,9 +312,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/stratumn/sdk"
   packages = ["bufferedbatch","cs","cs/cstesting","filestore","jsonhttp","jsonws","leveldbstore","store","store/storehttp","testutil","types"]
-  revision = "master"
+  revision = "f1fa18e78d2e4104f183391f9697bfcec22c3f82"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -414,6 +415,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d5a17e1c5b87f3c8646d2bc8b18284a8bed289f6009a2f2c541564817b560a4f"
+  inputs-digest = "f5f086a20f7c9a7d7299ebecec4ff5657ec711b4258c1df085028aea7a27346a"
   solver-name = "gps-cdcl"
   solver-version = 1

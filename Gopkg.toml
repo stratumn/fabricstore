@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/stratumn/sdk"
-  revision = "master"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/hyperledger/fabric"
