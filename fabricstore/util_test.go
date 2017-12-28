@@ -76,7 +76,7 @@ func (m *MockClient) ExecuteTx(req apitxn.ExecuteTxRequest) (tID apitxn.Transact
 		if err != nil {
 			return
 		}
-	case pc.SaveValue:
+	case pc.SetValue:
 		err = nArgsError(2, req.Args)
 		if err != nil {
 			return
@@ -112,8 +112,7 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 			return
 		}
 
-		segment := cstesting.RandomSegment()
-		result, err = json.Marshal(segment.Link)
+		result, err = json.Marshal(cstesting.RandomLink())
 
 		return
 	case pc.FindLinks:
@@ -123,8 +122,7 @@ func (m *MockClient) Query(req apitxn.QueryRequest) (result []byte, err error) {
 			return
 		}
 
-		segment := cstesting.RandomSegment()
-		links := []cs.Link{segment.Link}
+		links := []cs.Link{*cstesting.RandomLink()}
 		result, err = json.Marshal(links)
 
 		return

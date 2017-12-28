@@ -14,7 +14,6 @@ const (
 // New returns a fabric evidence
 func New(TransactionID string, timestamp uint64) (*cs.Evidence, error) {
 	return &cs.Evidence{
-		State:    cs.CompleteEvidence,
 		Backend:  ProofBackend,
 		Provider: ProofBackend,
 		Proof: &FabricProof{

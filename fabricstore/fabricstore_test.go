@@ -22,29 +22,28 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/stratumn/sdk/cs"
 	"github.com/stratumn/sdk/cs/cstesting"
 	"github.com/stratumn/sdk/filestore"
 	"github.com/stratumn/sdk/store"
-	"github.com/stratumn/sdk/types"
 
 	_ "github.com/stratumn/fabricstore/evidence"
 )
 
 var (
-	err             error
-	fabricstore     *FabricStore
-	mockFabricstore *FabricStore
-	test            *testing.T
-	linkHash        *types.Bytes32
-	config          *Config
-	process         string
-	integration     = flag.Bool("integration", false, "Run integration tests")
-	channelID       = flag.String("channelID", "mychannel", "channelID")
-	chaincodeID     = flag.String("chaincodeID", "pop", "chaincodeID")
-	configFile      = flag.String("configFile", os.Getenv("GOPATH")+"/src/github.com/stratumn/fabricstore/integration/client-config/client-config.yaml", "Absolute path to network config file")
-	version         = "0.1.0"
-	commit          = "00000000000000000000000000000000"
+	fabricstore       *FabricStore
+	mockFabricstore   *FabricStore
+	config            *Config
+	process           string
+	defaultPagination = store.Pagination{Offset: 0, Limit: 20}
+	integration       = flag.Bool("integration", false, "Run integration tests")
+	channelID         = flag.String("channelID", "mychannel", "channelID")
+	chaincodeID       = flag.String("chaincodeID", "pop", "chaincodeID")
+	configFile        = flag.String("configFile", os.Getenv("GOPATH")+"/src/github.com/stratumn/fabricstore/integration/client-config/client-config.yaml", "Absolute path to network config file")
+	version           = "0.1.0"
+	commit            = "00000000000000000000000000000000"
 )
 
 func TestMain(m *testing.M) {
@@ -125,9 +124,9 @@ func TestMain(m *testing.M) {
 
 // Unit tests
 
-func Test_AddDidSaveChannel(t *testing.T) {
-	c := make(chan *cs.Segment, 1)
-	mockFabricstore.AddDidSaveChannel(c)
+func Test_AddStoreEventChannel(t *testing.T) {
+	c := make(chan *store.Event, 1)
+	mockFabricstore.AddStoreEventChannel(c)
 }
 
 func Test_GetInfo(t *testing.T) {
@@ -140,38 +139,25 @@ func Test_GetInfo(t *testing.T) {
 	}
 }
 
-func Test_SaveSegment(t *testing.T) {
-	segment := cstesting.RandomSegment()
-	err := mockFabricstore.SaveSegment(segment)
-	if err != nil {
-		t.FailNow()
-	}
+func Test_CreateLink(t *testing.T) {
+	link := cstesting.RandomLink()
+	linkHash, err := mockFabricstore.CreateLink(link)
+	assert.NoError(t, err, "CreateLink should work")
+	assert.NotNil(t, linkHash, "CreateLink should return a linkHash")
 }
 
 func Test_GetSegment(t *testing.T) {
 	segment := cstesting.RandomSegment()
-	_, err := mockFabricstore.GetSegment(segment.GetLinkHash())
-	if err != nil {
-		t.Logf(err.Error())
-		t.FailNow()
-	}
-}
-
-func Test_DeleteSegment(t *testing.T) {
-	segment := cstesting.RandomSegment()
-	_, err := mockFabricstore.DeleteSegment(segment.GetLinkHash())
-	if err != nil {
-		t.Logf(err.Error())
-		t.FailNow()
-	}
+	segment, err := mockFabricstore.GetSegment(segment.GetLinkHash())
+	assert.NoError(t, err, "GetSegment should work")
+	assert.NotNil(t, segment, "GetSegment should return a segment")
 }
 
 func Test_FindSegments(t *testing.T) {
-	segmentFilter := &store.SegmentFilter{}
-	_, err := mockFabricstore.FindSegments(segmentFilter)
-	if err != nil {
-		t.FailNow()
-	}
+	segmentFilter := &store.SegmentFilter{Pagination: defaultPagination}
+	segmentSlice, err := mockFabricstore.FindSegments(segmentFilter)
+	assert.NoError(t, err, "FindSegments should work")
+	assert.NotEmpty(t, segmentSlice, "FindSegments should return several segments")
 }
 
 func Test_GetMapIDs(t *testing.T) {
@@ -184,229 +170,143 @@ func Test_GetMapIDs(t *testing.T) {
 
 func Test_NewBatch(t *testing.T) {
 	batch, err := mockFabricstore.NewBatch()
-	if err != nil {
-		t.FailNow()
-	}
-	batch.SaveValue([]byte("key"), []byte("value"))
+	assert.NoError(t, err, "NewBatch should work")
 
-	segment := cstesting.RandomSegment()
-	batch.SaveSegment(segment)
+	link := cstesting.RandomLink()
+	linkHash, err := batch.CreateLink(link)
+	assert.NoError(t, err, "batch.CreateLink should work")
+	assert.NotNil(t, linkHash, "CreateLink should return a linkHash")
 
-	batch.Write()
-
-	batch.DeleteValue([]byte("key"))
-	batch.DeleteSegment(segment.GetLinkHash())
-
-	batch.Write()
+	err = batch.Write()
+	assert.NoError(t, err, "batch.Write should work")
 }
 
-func Test_SaveValue(t *testing.T) {
-	err := mockFabricstore.SaveValue([]byte("key"), []byte("value"))
-	if err != nil {
-		t.FailNow()
-	}
+func Test_SetValue(t *testing.T) {
+	err := mockFabricstore.SetValue([]byte("key"), []byte("value"))
+	assert.NoError(t, err, "SetValue should work")
 }
 
 func Test_GetValue(t *testing.T) {
 	_, err := mockFabricstore.GetValue([]byte("key"))
-	if err != nil {
-		t.FailNow()
-	}
+	assert.NoError(t, err, "GetValue should work")
 }
 
 func Test_DeleteValue(t *testing.T) {
 	_, err := mockFabricstore.DeleteValue([]byte("key"))
-	if err != nil {
-		t.FailNow()
-	}
+	assert.NoError(t, err, "DeleteValue should work")
 }
 
 // Integration tests (go test -integration)
 
-func Test_SaveValueIntegration(t *testing.T) {
-	if *integration {
-		err := fabricstore.SaveValue([]byte("key"), []byte("value"))
-		if err != nil {
-			fmt.Println("Could not save value", err.Error())
-			t.FailNow()
-		}
+func Test_SetValueIntegration(t *testing.T) {
+	if !*integration {
+		return
 	}
+
+	err := fabricstore.SetValue([]byte("key"), []byte("value"))
+	assert.NoError(t, err, "SetValue should work")
+
+	value, err := fabricstore.GetValue([]byte("key"))
+	assert.NoError(t, err, "GetValue should work")
+	assert.Equal(t, "value", string(value), "'value' has just been inserted below")
+
+	value, err = fabricstore.DeleteValue([]byte("key"))
+	assert.NoError(t, err, "DeleteValue should work")
+	assert.Equal(t, "value", string(value), "'value' should be returned by DeleteValue")
+
+	value, err = fabricstore.GetValue([]byte("key"))
+	assert.NoError(t, err, "GetValue should work")
+	assert.Nil(t, value, "value has be deleted below")
 }
 
-func Test_GetValueIntegration(t *testing.T) {
-	if *integration {
-		value, err := fabricstore.GetValue([]byte("key"))
-		if err != nil {
-			fmt.Println("Could not get saved value", err.Error())
-			t.FailNow()
-		}
-		if string(value) != "value" {
-			fmt.Println("Unexpected value in store")
-			t.FailNow()
-		}
+func Test_CreateLinkIntegration(t *testing.T) {
+	if !*integration {
+		return
 	}
-}
 
-func Test_DeleteValueIntegration(t *testing.T) {
-	if *integration {
-		_, err := fabricstore.DeleteValue([]byte("key"))
-		if err != nil {
-			fmt.Println("Error while deleting value", err.Error())
-			t.FailNow()
-		}
-	}
-}
+	link := cstesting.RandomLink()
+	linkHash, err := fabricstore.CreateLink(link)
+	assert.NoError(t, err, "CreateLink should work")
+	assert.NotNil(t, linkHash, "CreateLink should return a linkHash")
+	lhash, _ := link.Hash()
+	assert.Equal(t, lhash.String(), linkHash.String(), "CreateLink should return the created linkHash")
 
-func Test_GetValueMissingIntegration(t *testing.T) {
-	if *integration {
-		value, err := fabricstore.GetValue([]byte("key"))
-		if err != nil {
-			fmt.Println("Did not expect error getting non existent key", err.Error())
-			t.FailNow()
-		}
-		if value != nil {
-			fmt.Println("Value:", value, "not deleted")
-			t.FailNow()
-		}
-	}
-}
-
-func Test_SaveSegmentIntegration(t *testing.T) {
-	if *integration {
-		segment := cstesting.RandomSegment()
-		linkHash = segment.GetLinkHash()
-		err := fabricstore.SaveSegment(segment)
-		if err != nil {
-			fmt.Println("Could not save segment", err.Error())
-			t.FailNow()
-		}
-	}
-}
-
-func Test_GetSegmentIntegration(t *testing.T) {
-	if *integration {
-		segment, err := fabricstore.GetSegment(linkHash)
-		if err != nil {
-			fmt.Println("Could not get segment", err.Error())
-			t.FailNow()
-		}
-
-		if segment.GetLinkHashString() != linkHash.String() {
-			fmt.Println("Did not retrieve expected segment")
-			t.FailNow()
-		}
-	}
-}
-
-func Test_DeleteSegmentIntegration(t *testing.T) {
-	if *integration {
-		_, err = fabricstore.DeleteSegment(linkHash)
-		if err != nil {
-			fmt.Println("Could not delete segment", err.Error())
-			t.FailNow()
-		}
-	}
-}
-
-func Test_GetSegmentMissingIntegration(t *testing.T) {
-	if *integration {
-		segment, err := fabricstore.GetSegment(linkHash)
-		if err != nil {
-			fmt.Println("Could not get segment", err.Error())
-			t.FailNow()
-		}
-
-		if segment != nil {
-			fmt.Println("Expected nil segment")
-			t.FailNow()
-		}
-	}
+	segment, err := fabricstore.GetSegment(linkHash)
+	assert.NoError(t, err, "GetSegment should work")
+	assert.NotNil(t, segment, "GetSegment should a segment")
 }
 
 func Test_FindSegmentsIntegration(t *testing.T) {
-	if *integration {
-		segment1 := cstesting.RandomSegment()
-		segment2 := cstesting.RandomBranch(segment1)
-		segment3 := cstesting.RandomSegment()
-
-		delete(segment1.Link.Meta, "prevLinkHash")
-		delete(segment3.Link.Meta, "prevLinkHash")
-
-		err := fabricstore.SaveSegment(segment1)
-		err = fabricstore.SaveSegment(segment2)
-		err = fabricstore.SaveSegment(segment3)
-
-		if err != nil {
-			fmt.Println("Could not save segments", err.Error())
-		}
-
-		process = segment1.Link.GetProcess()
-
-		segmentFilter := &store.SegmentFilter{
-			MapIDs: []string{segment1.Link.GetMapID()},
-			Pagination: store.Pagination{
-				Limit: 20,
-			},
-		}
-
-		segments, err := fabricstore.FindSegments(segmentFilter)
-		if err != nil {
-			fmt.Println("Could not find segments", err.Error())
-			t.FailNow()
-		}
-		if len(segments) != 2 {
-			fmt.Println("Expected 2 segments got", len(segments))
-			t.FailNow()
-		}
-
-		segmentFilter.MapIDs = []string{segment1.Link.GetMapID(), segment3.Link.GetMapID()}
-		segments, err = fabricstore.FindSegments(segmentFilter)
-		if err != nil {
-			fmt.Println("Could not find segments", err.Error())
-			t.FailNow()
-		}
-		if len(segments) != 3 {
-			fmt.Println("Expected 3 segments got", len(segments))
-			t.FailNow()
-		}
+	if !*integration {
+		return
 	}
+
+	link1 := cstesting.RandomLink()
+	link2 := cstesting.RandomBranch(link1)
+	link3 := cstesting.RandomLink()
+
+	delete(link1.Meta, "prevLinkHash")
+	delete(link3.Meta, "prevLinkHash")
+
+	_, err := fabricstore.CreateLink(link1)
+	assert.NoError(t, err, "CreateLink(link1) should work")
+	_, err = fabricstore.CreateLink(link2)
+	assert.NoError(t, err, "CreateLink(link2) should work")
+	_, err = fabricstore.CreateLink(link3)
+	assert.NoError(t, err, "CreateLink(link3) should work")
+
+	process = link1.GetProcess()
+
+	segmentFilter := &store.SegmentFilter{
+		MapIDs:     []string{link1.GetMapID()},
+		Pagination: defaultPagination,
+	}
+
+	segments, err := fabricstore.FindSegments(segmentFilter)
+	assert.NoError(t, err, "FindSegments should work")
+	assert.Len(t, segments, 2, "FindSegments should find 2 segments")
+
+	segmentFilter.MapIDs = []string{link1.GetMapID(), link3.GetMapID()}
+	segments, err = fabricstore.FindSegments(segmentFilter)
+	assert.NoError(t, err, "FindSegments should work")
+	assert.Len(t, segments, 3, "FindSegments should find 3 segments")
 }
 
 func Test_GetMapIDsIntegration(t *testing.T) {
-	if *integration {
-		mapFilter := &store.MapFilter{
-			Process: process,
-			Pagination: store.Pagination{
-				Limit: 20,
-			},
-		}
-
-		mapIds, err := fabricstore.GetMapIDs(mapFilter)
-
-		if err != nil {
-			fmt.Println("Could not find mapIds", err.Error())
-			t.FailNow()
-		}
-		if len(mapIds) == 0 {
-			fmt.Println("Expected at least one mapId")
-			t.FailNow()
-		}
+	if !*integration {
+		return
 	}
+
+	mapFilter := &store.MapFilter{
+		Process:    process,
+		Pagination: defaultPagination,
+	}
+
+	mapIds, err := fabricstore.GetMapIDs(mapFilter)
+	assert.NoError(t, err, "GetMapIDs should work")
+	assert.NotEmpty(t, mapIds, "GetMapIDs should return an non empty list of mapIds")
 }
 
-func Test_AddDidSaveChannelIntegration(t *testing.T) {
-	if *integration {
-		c := make(chan *cs.Segment, 1)
-		fabricstore.AddDidSaveChannel(c)
-
-		segment := cstesting.RandomSegment()
-		if err := fabricstore.SaveSegment(segment); err != nil {
-			t.FailNow()
-		}
-
-		if got, want := <-c, segment; want.GetLinkHashString() != got.GetLinkHashString() {
-			t.Errorf("Didn't receive segment via didSaveChan")
-			t.FailNow()
-		}
+func Test_AddStoreEventChannelIntegration(t *testing.T) {
+	if !*integration {
+		return
 	}
+
+	c := make(chan *store.Event)
+	fabricstore.AddStoreEventChannel(c)
+
+	link := cstesting.RandomLink()
+	linkHash, _ := link.HashString()
+
+	_, err := fabricstore.CreateLink(link)
+	assert.NoError(t, err, "CreateLink should work")
+
+	event := <-c
+	assert.Equal(t, store.SavedLinks, event.EventType, "CreateLink should send a SavedLinkEvent")
+	links, ok := event.Data.([]*cs.Link)
+
+	assert.True(t, ok, "SavedLinks should contain a []*cs.Link")
+	assert.Equal(t, 1, len(links))
+	retLinkHash, _ := links[0].HashString()
+	assert.Equal(t, linkHash, retLinkHash, "CreateLink should send a SavedLinkEvent")
 }

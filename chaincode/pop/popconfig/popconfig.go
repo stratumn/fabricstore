@@ -7,7 +7,7 @@ const (
 	DeleteLink  = "DeleteLink"
 	FindLinks   = "FindLinks"
 	GetMapIDs   = "GetMapIDs"
-	SaveValue   = "SaveValue"
+	SetValue    = "SetValue"
 	GetValue    = "GetValue"
 	DeleteValue = "DeleteValue"
 )

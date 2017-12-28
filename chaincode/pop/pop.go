@@ -185,8 +185,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.FindLinks(APIstub, args)
 	case pc.GetMapIDs:
 		return s.GetMapIDs(APIstub, args)
-	case pc.SaveValue:
-		return s.SaveValue(APIstub, args)
+	case pc.SetValue:
+		return s.SetValue(APIstub, args)
 	case pc.GetValue:
 		return s.GetValue(APIstub, args)
 	case pc.DeleteValue:
@@ -349,8 +349,8 @@ func (s *SmartContract) GetMapIDs(stub shim.ChaincodeStubInterface, args []strin
 	return shim.Success(resultBytes)
 }
 
-// SaveValue saves key, value in CouchDB
-func (s *SmartContract) SaveValue(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// SetValue saves key, value in CouchDB
+func (s *SmartContract) SetValue(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	compositeKey, err := getValueCompositeKey(args[0], stub)
 	if err != nil {
 		return shim.Error(err.Error())
