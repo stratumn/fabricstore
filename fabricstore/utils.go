@@ -134,7 +134,9 @@ func readBlock(block *common.Block) ([]*Transaction, error) {
 			if err != nil {
 				return nil, err
 			}
-			transactions = append(transactions, tx)
+			if tx != nil {
+				transactions = append(transactions, tx)
+			}
 		}
 	}
 
@@ -206,5 +208,5 @@ func getChaincodeEvent(txData []byte) (*Transaction, error) {
 		return transaction, nil
 	}
 
-	return nil, errors.New("Not an endorser transaction")
+	return nil, nil
 }
