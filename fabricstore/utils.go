@@ -206,5 +206,5 @@ func getChaincodeEvent(txData []byte) (*Transaction, error) {
 		return transaction, nil
 	}
 
-	return nil, nil
+	return nil, errors.New("Not an endorser transaction")
 }
