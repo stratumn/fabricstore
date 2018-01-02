@@ -5,6 +5,7 @@ fabricstore implements [stratumn/sdk/store.Adapter](https://github.com/stratumn/
 ### Deployment
 
 fabricstore requires 4 environment variables:
+
 * `CHANNEL_ID`: channel id used on the Hyperledger Fabric network to deploy the chaincode
 * `CHAINCODE_ID`: chaincode id used to deploy indigo proof of process on the Hyperledger Fabric network
 * `CLIENT_CONFIG_PATH`: absolute path to the client configuration file (example under `integration/client-config/client-config.yaml`)
@@ -27,6 +28,10 @@ This will download the required Fabric images and launch the network using docke
 ---
 
 If you want to start/stop the integration network outside the test you can do so by running `integration/start.sh` and `integration/stop.sh`.
+
+---
+
+The main goal of _fabricstore_ is to be integrated into Indigo framework suite. To use the Indigo fabric storage, please install `strat` from #stratumn/sdk to generate a new project choosing the store _Indigo's Hyperledger Fabric Node_.
 
 ### License
 
