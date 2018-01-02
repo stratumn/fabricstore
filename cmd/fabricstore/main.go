@@ -35,7 +35,7 @@ var (
 	chaincodeID = flag.String("chaincodeID", os.Getenv("CHAINCODE_ID"), "chaincodeID")
 	configFile  = flag.String("configFile", os.Getenv("CLIENT_CONFIG_PATH"), "Absolute path to network config file")
 	path        = flag.String("path", os.Getenv("LOCALSTORAGE_PATH"), "Path used for local storage")
-	version     = "0.1.0"
+	version     = "x.y.z"
 	commit      = "00000000000000000000000000000000"
 )
 
