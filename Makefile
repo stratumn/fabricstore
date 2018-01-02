@@ -3,7 +3,6 @@ NIX_OS_ARCHS?=linux-amd64
 DIST_DIR=dist
 COMMAND_DIR=cmd
 VERSION=$(shell ./version.sh)
-GENERATOR_VERSION=$(shell ./version.sh -g)
 PRERELEASE=$(shell cat PRERELEASE)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_PATH=$(shell git rev-parse --show-toplevel)
@@ -13,7 +12,7 @@ GIT_TAG=v$(VERSION)
 RELEASE_NAME=$(GIT_TAG)
 RELEASE_NOTES_FILE=RELEASE_NOTES.md
 TEXT_FILES=LICENSE RELEASE_NOTES.md CHANGE_LOG.md
-DOCKER_USER=$(GITHUB_USER)
+DOCKER_USER?=indigoframework
 DOCKER_FILE_TEMPLATE=Dockerfile.tpl
 COVERAGE_FILE=coverage.txt
 COVERHTML_FILE=coverhtml.txt
@@ -30,7 +29,7 @@ GITHUB_RELEASE_FLAGS=--user '$(GITHUB_USER)' --repo '$(GITHUB_REPO)' --tag '$(GI
 GITHUB_RELEASE_RELEASE_FLAGS=$(GITHUB_RELEASE_FLAGS) --name '$(RELEASE_NAME)' --description "$$(cat $(RELEASE_NOTES_FILE))"
 
 GO_LIST=$(GO_CMD) list
-GO_BUILD=$(GO_CMD) build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-extldflags "-static" -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X github.com/stratumn/sdk/strat/cmd.DefaultGeneratorsRef=$(GENERATOR_VERSION)'
+GO_BUILD=$(GO_CMD) build -gcflags=-trimpath=$(GOPATH) -asmflags=-trimpath=$(GOPATH) -ldflags '-extldflags "-static" -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT)'
 GO_TEST=$(GO_CMD) test
 GO_TEST_FLAG?=-integration
 GO_BENCHMARK=$(GO_TEST) -bench .
@@ -60,8 +59,8 @@ TEST_LIST=$(foreach package, $(TEST_PACKAGES), test_$(package))
 BENCHMARK_LIST=$(foreach package, $(TEST_PACKAGES), benchmark_$(package))
 LINT_LIST=$(foreach package, $(PACKAGES), lint_$(package))
 GITHUB_UPLOAD_LIST=$(foreach file, $(ZIP_FILES), github_upload_$(firstword $(subst ., ,$(file))))
-DOCKER_IMAGE_LIST=$(foreach command, $(COMMANDS), docker_image_$(command))
-DOCKER_PUSH_LIST=$(foreach command, $(COMMANDS), docker_push_$(command))
+DOCKER_IMAGE_LIST=$(foreach command, $(COMMANDS), docker_image_$(command)) docker_image_fabricinstaller
+DOCKER_PUSH_LIST=$(foreach command, $(COMMANDS), docker_push_$(command)) docker_push_fabricinstaller
 CLEAN_LIST=$(foreach path, $(CLEAN_PATHS), clean_$(path))
 
 # == .PHONY ===================================================================
@@ -199,6 +198,11 @@ $(DIST_DIR)/%.Dockerfile: $(DOCKER_FILE_TEMPLATE)
 		echo cat $(DOCKER_EXTRA) \>\> $@; \
 		cat $(DOCKER_EXTRA) >> $@; \
 	fi
+
+$(DIST_DIR)/fabricinstaller.Dockerfile: installer/Dockerfile
+	mkdir -p $(DIST_DIR)/linux-amd64
+	cp $< $@
+	touch $(DIST_DIR)/linux-amd64/fabricinstaller
 
 # == docker_images ============================================================
 docker_images: $(DOCKER_IMAGE_LIST)

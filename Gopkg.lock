@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/docker/cli"
   packages = ["cli/command/image/build","cli/config","cli/config/configfile","cli/config/credentials","opts"]
-  revision = "2b8eb23b8c97868ba270f9ca2cbbaa5ff39091a2"
+  revision = "70db7cc0fc9b53dcac56ee6c5fc1ffdff665273a"
 
 [[projects]]
   branch = "master"
@@ -154,7 +154,7 @@
   branch = "master"
   name = "github.com/google/certificate-transparency-go"
   packages = [".","asn1","tls","x509","x509/pkix"]
-  revision = "b1746f61cc9e8546b1c3a6e258ef5aad10249d06"
+  revision = "7618200f647971f5f6b0efc6e3498af5b0133a48"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -177,7 +177,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [".","hcl/ast","hcl/parser","hcl/printer","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
@@ -190,7 +190,7 @@
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = ["api/apiconfig","api/apicryptosuite","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","api/apitxn/chmgmtclient","api/apitxn/resmgmtclient","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/bccsp","internal/github.com/hyperledger/fabric/bccsp/factory","internal/github.com/hyperledger/fabric/bccsp/pkcs11","internal/github.com/hyperledger/fabric/bccsp/signer","internal/github.com/hyperledger/fabric/bccsp/sw","internal/github.com/hyperledger/fabric/bccsp/utils","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","internal/github.com/hyperledger/fabric/core/ledger/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/protos/utils","internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/comm","pkg/config/urlutil","pkg/cryptosuite","pkg/cryptosuite/bccsp","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/chclient","pkg/fabric-txn/chmgmtclient","pkg/fabric-txn/discovery/staticdiscovery","pkg/fabric-txn/internal","pkg/fabric-txn/resmgmtclient","pkg/fabric-txn/selection/staticselection","pkg/logging","pkg/logging/deflogger","pkg/logging/utils","test/metadata","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer"]
-  revision = "78503fe4e7dc5de22826667e55f12ab056f1b11b"
+  revision = "3d663614c417394b160605e477d4b84f700613a2"
 
 [[projects]]
   branch = "master"
@@ -306,16 +306,16 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
-  version = "v1.0.0"
+  revision = "1a0c4a370c3e8286b835467d2dfcdaf636c3538b"
 
 [[projects]]
-  branch = "master"
   name = "github.com/stratumn/sdk"
   packages = ["bufferedbatch","cs","cs/cstesting","filestore","jsonhttp","jsonws","leveldbstore","store","store/storehttp","testutil","types"]
-  revision = "f1fa18e78d2e4104f183391f9697bfcec22c3f82"
+  revision = "10b1902c83d64440da140393335c0856879d5559"
+  version = "v0.2.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -374,7 +374,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "571f7bbbe08da2a8955aed9d4db316e78630e9a3"
+  revision = "83801418e1b59fb1880e363299581ee543af32ca"
 
 [[projects]]
   branch = "master"
@@ -415,6 +415,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f5f086a20f7c9a7d7299ebecec4ff5657ec711b4258c1df085028aea7a27346a"
+  inputs-digest = "f133e1a8ca1640ab66356648dcd7e2bd1fa1494419ead572d56bf3071ef1e83b"
   solver-name = "gps-cdcl"
   solver-version = 1
