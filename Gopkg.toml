@@ -1,6 +1,6 @@
 [[constraint]]
-  name = "github.com/stratumn/sdk"
-  version = "v0.2.0"
+  name = "github.com/stratumn/go-indigocore"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/hyperledger/fabric"
@@ -33,3 +33,16 @@
 [[override]]
   name = "github.com/xeipuuv/gojsonschema"
   revision = "93e72a773fade158921402d6a24c819b48aba29d"
+
+[[override]]
+  branch = "master"
+  name = "git.apache.org/thrift.git"
+  source = "github.com/apache/thrift"
+
+[[override]]
+  name = "github.com/miekg/pkcs11"
+  revision="5f6e0d0dad6f472df908c8e968a98ef00c9224bb"
+
+[[override]]
+  name = "github.com/google/certificate-transparency-go"
+  revision="391726f8973ddb3521ab1a462bd55a35c6f67f0b"

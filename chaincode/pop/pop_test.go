@@ -26,10 +26,10 @@ import (
 
 	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
 
-	"github.com/stratumn/sdk/cs"
-	"github.com/stratumn/sdk/cs/cstesting"
-	"github.com/stratumn/sdk/store"
-	"github.com/stratumn/sdk/testutil"
+	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/cs/cstesting"
+	"github.com/stratumn/go-indigocore/store"
+	"github.com/stratumn/go-indigocore/testutil"
 )
 
 var (
@@ -87,7 +87,7 @@ func TestPop_CreateLink(t *testing.T) {
 	stub := shim.NewMockStub("pop", cc)
 
 	link := cstesting.RandomLink()
-	delete(link.Meta, "prevLinkHash")
+	link.Meta.PrevLinkHash = ""
 	linkHashString, err := link.HashString()
 	if err != nil {
 		t.Logf(err.Error())

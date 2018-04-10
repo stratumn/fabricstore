@@ -3,8 +3,18 @@
 
 [[projects]]
   branch = "master"
+  name = "git.apache.org/thrift.git"
+  packages = ["lib/go/thrift"]
+  revision = "606f1ef31447526b908244933d5b716397a6bad8"
+  source = "github.com/apache/thrift"
+
+[[projects]]
+  branch = "master"
   name = "github.com/Azure/go-ansiterm"
-  packages = [".","winterm"]
+  packages = [
+    ".",
+    "winterm"
+  ]
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
@@ -21,8 +31,28 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  branch = "master"
   name = "github.com/cloudflare/cfssl"
-  packages = ["api","auth","certdb","config","crypto/pkcs7","csr","errors","helpers","helpers/derhelpers","info","log","ocsp/config","signer"]
+  packages = [
+    "api",
+    "auth",
+    "certdb",
+    "config",
+    "crypto/pkcs7",
+    "csr",
+    "errors",
+    "helpers",
+    "helpers/derhelpers",
+    "info",
+    "log",
+    "ocsp/config",
+    "signer"
+  ]
   revision = "d2393674072314fda47d2c7c16cb7fd4cdc16821"
 
 [[projects]]
@@ -40,29 +70,97 @@
 [[projects]]
   branch = "master"
   name = "github.com/docker/cli"
-  packages = ["cli/command/image/build","cli/config","cli/config/configfile","cli/config/credentials","opts"]
+  packages = [
+    "cli/command/image/build",
+    "cli/config",
+    "cli/config/configfile",
+    "cli/config/credentials",
+    "opts"
+  ]
   revision = "70db7cc0fc9b53dcac56ee6c5fc1ffdff665273a"
 
 [[projects]]
   branch = "master"
   name = "github.com/docker/distribution"
-  packages = [".","digestset","reference","registry/api/errcode","registry/api/v2","registry/client","registry/client/auth","registry/client/auth/challenge","registry/client/transport","registry/storage/cache","registry/storage/cache/memory"]
+  packages = [
+    ".",
+    "digestset",
+    "reference",
+    "registry/api/errcode",
+    "registry/api/v2",
+    "registry/client",
+    "registry/client/auth",
+    "registry/client/auth/challenge",
+    "registry/client/transport",
+    "registry/storage/cache",
+    "registry/storage/cache/memory"
+  ]
   revision = "f4118485915abb8b163442717326597908eee6aa"
 
 [[projects]]
   name = "github.com/docker/docker"
-  packages = ["api","api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/image","api/types/mount","api/types/network","api/types/registry","api/types/strslice","api/types/swarm","api/types/swarm/runtime","api/types/time","api/types/versions","api/types/volume","builder/dockerignore","builder/remotecontext/git","client","opts","pkg/archive","pkg/fileutils","pkg/homedir","pkg/idtools","pkg/ioutils","pkg/jsonmessage","pkg/longpath","pkg/mount","pkg/pools","pkg/progress","pkg/stdcopy","pkg/streamformatter","pkg/stringid","pkg/symlink","pkg/system","pkg/tarsum","pkg/term","pkg/term/windows","pkg/urlutil","registry","registry/resumable"]
+  packages = [
+    "api",
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/events",
+    "api/types/filters",
+    "api/types/image",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/swarm/runtime",
+    "api/types/time",
+    "api/types/versions",
+    "api/types/volume",
+    "builder/dockerignore",
+    "builder/remotecontext/git",
+    "client",
+    "opts",
+    "pkg/archive",
+    "pkg/fileutils",
+    "pkg/homedir",
+    "pkg/idtools",
+    "pkg/ioutils",
+    "pkg/jsonmessage",
+    "pkg/longpath",
+    "pkg/mount",
+    "pkg/pools",
+    "pkg/progress",
+    "pkg/stdcopy",
+    "pkg/streamformatter",
+    "pkg/stringid",
+    "pkg/symlink",
+    "pkg/system",
+    "pkg/tarsum",
+    "pkg/term",
+    "pkg/term/windows",
+    "pkg/urlutil",
+    "registry",
+    "registry/resumable"
+  ]
   revision = "fe8aac6f5ae413a967adb0adad0b54abdfb825c4"
 
 [[projects]]
   name = "github.com/docker/docker-credential-helpers"
-  packages = ["client","credentials","pass"]
+  packages = [
+    "client",
+    "credentials",
+    "pass"
+  ]
   revision = "d68f9aeca33f5fd3f08eeae5e9d175edf4e731d1"
   version = "v0.6.0"
 
 [[projects]]
   name = "github.com/docker/go-connections"
-  packages = ["nat","sockets","tlsconfig"]
+  packages = [
+    "nat",
+    "sockets",
+    "tlsconfig"
+  ]
   revision = "3ede32e2033de7505e6500d6c868c2b9ed9f169d"
   version = "v0.3.0"
 
@@ -75,7 +173,28 @@
 [[projects]]
   branch = "master"
   name = "github.com/docker/libcompose"
-  packages = ["config","docker","docker/auth","docker/builder","docker/client","docker/container","docker/ctx","docker/image","docker/network","docker/service","docker/volume","labels","logger","lookup","project","project/events","project/options","utils","version","yaml"]
+  packages = [
+    "config",
+    "docker",
+    "docker/auth",
+    "docker/builder",
+    "docker/client",
+    "docker/container",
+    "docker/ctx",
+    "docker/image",
+    "docker/network",
+    "docker/service",
+    "docker/volume",
+    "labels",
+    "logger",
+    "lookup",
+    "project",
+    "project/events",
+    "project/options",
+    "utils",
+    "version",
+    "yaml"
+  ]
   revision = "57bd716502dcbe1799f026148016022b0f3b989c"
 
 [[projects]]
@@ -104,7 +223,11 @@
 
 [[projects]]
   name = "github.com/go-kit/kit"
-  packages = ["log","log/level","log/term"]
+  packages = [
+    "log",
+    "log/level",
+    "log/term"
+  ]
   revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
   version = "v0.6.0"
 
@@ -115,18 +238,6 @@
   version = "v0.3.0"
 
 [[projects]]
-  name = "github.com/go-playground/locales"
-  packages = [".","currency"]
-  revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
-  version = "v0.11.2"
-
-[[projects]]
-  name = "github.com/go-playground/universal-translator"
-  packages = ["."]
-  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
-  version = "v0.16.0"
-
-[[projects]]
   name = "github.com/go-stack/stack"
   packages = ["."]
   revision = "259ab82a6cad3992b4e21ff5cac294ccb06474bc"
@@ -134,14 +245,25 @@
 
 [[projects]]
   name = "github.com/gogo/protobuf"
-  packages = ["proto"]
+  packages = [
+    "gogoproto",
+    "proto",
+    "protoc-gen-gogo/descriptor"
+  ]
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
   version = "v0.5"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
-  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/empty","ptypes/timestamp"]
+  packages = [
+    "proto",
+    "ptypes",
+    "ptypes/any",
+    "ptypes/duration",
+    "ptypes/empty",
+    "ptypes/timestamp"
+  ]
   revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[projects]]
@@ -151,10 +273,15 @@
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
-  branch = "master"
   name = "github.com/google/certificate-transparency-go"
-  packages = [".","asn1","tls","x509","x509/pkix"]
-  revision = "7618200f647971f5f6b0efc6e3498af5b0133a48"
+  packages = [
+    ".",
+    "asn1",
+    "tls",
+    "x509",
+    "x509/pkix"
+  ]
+  revision = "391726f8973ddb3521ab1a462bd55a35c6f67f0b"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -177,20 +304,138 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/printer","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/printer",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/crypto","common/errors","common/flogging","common/ledger","common/metadata","common/util","core/chaincode/platforms","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/config","core/container/util","core/ledger/util","msp","protos/common","protos/ledger/queryresult","protos/msp","protos/peer","protos/utils"]
+  packages = [
+    "bccsp",
+    "bccsp/factory",
+    "bccsp/pkcs11",
+    "bccsp/signer",
+    "bccsp/sw",
+    "bccsp/utils",
+    "common/crypto",
+    "common/errors",
+    "common/flogging",
+    "common/ledger",
+    "common/metadata",
+    "common/util",
+    "core/chaincode/platforms",
+    "core/chaincode/platforms/car",
+    "core/chaincode/platforms/golang",
+    "core/chaincode/platforms/java",
+    "core/chaincode/platforms/util",
+    "core/chaincode/shim",
+    "core/comm",
+    "core/config",
+    "core/container/util",
+    "core/ledger/util",
+    "msp",
+    "protos/common",
+    "protos/ledger/queryresult",
+    "protos/msp",
+    "protos/peer",
+    "protos/utils"
+  ]
   revision = "014d6befcf67f3787bb3d67ff34e1a98dc6aec5f"
   version = "v1.0.5"
 
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
-  packages = ["api/apiconfig","api/apicryptosuite","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","api/apitxn/chmgmtclient","api/apitxn/resmgmtclient","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/bccsp","internal/github.com/hyperledger/fabric/bccsp/factory","internal/github.com/hyperledger/fabric/bccsp/pkcs11","internal/github.com/hyperledger/fabric/bccsp/signer","internal/github.com/hyperledger/fabric/bccsp/sw","internal/github.com/hyperledger/fabric/bccsp/utils","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","internal/github.com/hyperledger/fabric/core/ledger/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/protos/utils","internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/comm","pkg/config/urlutil","pkg/cryptosuite","pkg/cryptosuite/bccsp","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/chclient","pkg/fabric-txn/chmgmtclient","pkg/fabric-txn/discovery/staticdiscovery","pkg/fabric-txn/internal","pkg/fabric-txn/resmgmtclient","pkg/fabric-txn/selection/staticselection","pkg/logging","pkg/logging/deflogger","pkg/logging/utils","test/metadata","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer"]
+  packages = [
+    "api/apiconfig",
+    "api/apicryptosuite",
+    "api/apifabca",
+    "api/apifabclient",
+    "api/apilogging",
+    "api/apitxn",
+    "api/apitxn/chmgmtclient",
+    "api/apitxn/resmgmtclient",
+    "def/fabapi",
+    "def/fabapi/context",
+    "def/fabapi/context/defprovider",
+    "def/fabapi/opt",
+    "internal/github.com/hyperledger/fabric-ca/api",
+    "internal/github.com/hyperledger/fabric-ca/lib",
+    "internal/github.com/hyperledger/fabric-ca/lib/tls",
+    "internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge",
+    "internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge",
+    "internal/github.com/hyperledger/fabric-ca/util",
+    "internal/github.com/hyperledger/fabric/bccsp",
+    "internal/github.com/hyperledger/fabric/bccsp/factory",
+    "internal/github.com/hyperledger/fabric/bccsp/pkcs11",
+    "internal/github.com/hyperledger/fabric/bccsp/signer",
+    "internal/github.com/hyperledger/fabric/bccsp/sw",
+    "internal/github.com/hyperledger/fabric/bccsp/utils",
+    "internal/github.com/hyperledger/fabric/common/channelconfig",
+    "internal/github.com/hyperledger/fabric/common/crypto",
+    "internal/github.com/hyperledger/fabric/common/util",
+    "internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
+    "internal/github.com/hyperledger/fabric/core/ledger/util",
+    "internal/github.com/hyperledger/fabric/events/consumer",
+    "internal/github.com/hyperledger/fabric/msp",
+    "internal/github.com/hyperledger/fabric/protos/orderer",
+    "internal/github.com/hyperledger/fabric/protos/utils",
+    "internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge",
+    "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
+    "pkg/config",
+    "pkg/config/comm",
+    "pkg/config/urlutil",
+    "pkg/cryptosuite",
+    "pkg/cryptosuite/bccsp",
+    "pkg/errors",
+    "pkg/fabric-ca-client",
+    "pkg/fabric-client",
+    "pkg/fabric-client/channel",
+    "pkg/fabric-client/credentialmgr",
+    "pkg/fabric-client/events",
+    "pkg/fabric-client/events/consumer",
+    "pkg/fabric-client/identity",
+    "pkg/fabric-client/internal",
+    "pkg/fabric-client/internal/txnproc",
+    "pkg/fabric-client/keyvaluestore",
+    "pkg/fabric-client/mocks",
+    "pkg/fabric-client/orderer",
+    "pkg/fabric-client/peer",
+    "pkg/fabric-client/signingmgr",
+    "pkg/fabric-txn/chclient",
+    "pkg/fabric-txn/chmgmtclient",
+    "pkg/fabric-txn/discovery/staticdiscovery",
+    "pkg/fabric-txn/internal",
+    "pkg/fabric-txn/resmgmtclient",
+    "pkg/fabric-txn/selection/staticselection",
+    "pkg/logging",
+    "pkg/logging/deflogger",
+    "pkg/logging/utils",
+    "test/metadata",
+    "third_party/github.com/hyperledger/fabric/protos/common",
+    "third_party/github.com/hyperledger/fabric/protos/ledger/rwset",
+    "third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset",
+    "third_party/github.com/hyperledger/fabric/protos/msp",
+    "third_party/github.com/hyperledger/fabric/protos/orderer",
+    "third_party/github.com/hyperledger/fabric/protos/peer"
+  ]
   revision = "3d663614c417394b160605e477d4b84f700613a2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  revision = "c2b33e8439af944379acbdd9c3a5fe0bc44bd8a5"
 
 [[projects]]
   branch = "master"
@@ -223,10 +468,15 @@
   version = "v1.7.4"
 
 [[projects]]
-  branch = "master"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/miekg/pkcs11"
   packages = ["."]
-  revision = "57296583125bf58643f8bac3635bc1af1d65a6df"
+  revision = "5f6e0d0dad6f472df908c8e968a98ef00c9224bb"
 
 [[projects]]
   branch = "master"
@@ -247,14 +497,20 @@
 
 [[projects]]
   name = "github.com/opencontainers/image-spec"
-  packages = ["specs-go","specs-go/v1"]
+  packages = [
+    "specs-go",
+    "specs-go/v1"
+  ]
   revision = "d60099175f88c47cd379c4738d158884749ed235"
   version = "v1.0.1"
 
 [[projects]]
   branch = "master"
   name = "github.com/opencontainers/runc"
-  packages = ["libcontainer/system","libcontainer/user"]
+  packages = [
+    "libcontainer/system",
+    "libcontainer/user"
+  ]
   revision = "e6516b3d5dc780cb57a976013c242a9a93052543"
 
 [[projects]]
@@ -276,6 +532,42 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/promhttp"
+  ]
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "38c53a9f4bfcd932d1b00bfc65e256a7fba6b37a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs"
+  ]
+  revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "d682213848ed68c0a260ca37d6dd5ace8423f5ba"
@@ -283,7 +575,10 @@
 
 [[projects]]
   name = "github.com/spf13/afero"
-  packages = [".","mem"]
+  packages = [
+    ".",
+    "mem"
+  ]
   revision = "8d919cbe7e2627e417f3e45c3c0e489a5b7e2536"
   version = "v1.0.0"
 
@@ -312,10 +607,34 @@
   revision = "1a0c4a370c3e8286b835467d2dfcdaf636c3538b"
 
 [[projects]]
-  name = "github.com/stratumn/sdk"
-  packages = ["bufferedbatch","cs","cs/cstesting","filestore","jsonhttp","jsonws","leveldbstore","store","store/storehttp","testutil","types"]
-  revision = "10b1902c83d64440da140393335c0856879d5559"
-  version = "v0.2.0"
+  branch = "master"
+  name = "github.com/stratumn/go-crypto"
+  packages = [
+    "encoding",
+    "keys",
+    "signatures"
+  ]
+  revision = "1a5009b67d6c88d46ff009712da69481d56ddbbe"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/stratumn/go-indigocore"
+  packages = [
+    "bufferedbatch",
+    "cs",
+    "cs/cstesting",
+    "filestore",
+    "fossilizer",
+    "jsonhttp",
+    "jsonws",
+    "leveldbstore",
+    "monitoring",
+    "store",
+    "store/storehttp",
+    "testutil",
+    "types"
+  ]
+  revision = "69467183c5538a189d5a45419224848eb0d63b98"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -326,14 +645,31 @@
 [[projects]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
-  packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
+  packages = [
+    "leveldb",
+    "leveldb/cache",
+    "leveldb/comparer",
+    "leveldb/errors",
+    "leveldb/filter",
+    "leveldb/iterator",
+    "leveldb/journal",
+    "leveldb/memdb",
+    "leveldb/opt",
+    "leveldb/storage",
+    "leveldb/table",
+    "leveldb/util"
+  ]
   revision = "34011bf325bce385408353a30b101fe5e923eb6e"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
-  packages = ["common","db","log"]
-  revision = "bfcc0217f120d3bee6730ba0789d2eb72fc2e889"
-  version = "v0.5.0"
+  packages = [
+    "common",
+    "db",
+    "log"
+  ]
+  revision = "1b9b5652a199ab0be2e781393fb275b66377309d"
+  version = "v0.7.0"
 
 [[projects]]
   branch = "master"
@@ -354,32 +690,94 @@
 
 [[projects]]
   branch = "master"
+  name = "go.opencensus.io"
+  packages = [
+    "exporter/jaeger",
+    "exporter/jaeger/internal/gen-go/jaeger",
+    "exporter/prometheus",
+    "internal",
+    "internal/tagencoding",
+    "plugin/ochttp",
+    "plugin/ochttp/propagation/b3",
+    "stats",
+    "stats/internal",
+    "stats/view",
+    "tag",
+    "trace",
+    "trace/internal",
+    "trace/propagation"
+  ]
+  revision = "5710257e78ab540a7c6f0e203009abea60eb97b7"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ocsp","pkcs12","pkcs12/internal/rc2","sha3","ssh/terminal"]
+  packages = [
+    "cryptobyte",
+    "cryptobyte/asn1",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "ocsp",
+    "pkcs12",
+    "pkcs12/internal/rc2",
+    "sha3",
+    "ssh/terminal"
+  ]
   revision = "d585fd2cc9195196078f516b69daff6744ef5e84"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","http2","http2/hpack","idna","internal/timeseries","lex/httplex","proxy","trace"]
+  packages = [
+    "context",
+    "context/ctxhttp",
+    "http2",
+    "http2/hpack",
+    "idna",
+    "internal/timeseries",
+    "lex/httplex",
+    "proxy",
+    "trace"
+  ]
   revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
-  packages = ["syncmap"]
+  packages = [
+    "semaphore",
+    "syncmap"
+  ]
   revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "83801418e1b59fb1880e363299581ee543af32ca"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
-  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
+  ]
   revision = "eb22672bea55af56d225d4e35405f4d2e9f062a0"
 
 [[projects]]
@@ -390,21 +788,43 @@
 
 [[projects]]
   branch = "master"
+  name = "google.golang.org/api"
+  packages = ["support/bundler"]
+  revision = "9f7560f3b05bd90f33f9d56a449e5afd4dab15b3"
+
+[[projects]]
+  branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   revision = "a8101f21cf983e773d0c1133ebc5424792003214"
 
 [[projects]]
   name = "google.golang.org/grpc"
-  packages = [".","balancer","balancer/roundrobin","codes","connectivity","credentials","encoding","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","stats","status","tap","transport"]
+  packages = [
+    ".",
+    "balancer",
+    "balancer/roundrobin",
+    "codes",
+    "connectivity",
+    "credentials",
+    "encoding",
+    "grpclb/grpc_lb_v1/messages",
+    "grpclog",
+    "internal",
+    "keepalive",
+    "metadata",
+    "naming",
+    "peer",
+    "resolver",
+    "resolver/dns",
+    "resolver/passthrough",
+    "stats",
+    "status",
+    "tap",
+    "transport"
+  ]
   revision = "e687fa4e6424368ece6e4fe727cea2c806a0fcb4"
   version = "v1.8.2"
-
-[[projects]]
-  name = "gopkg.in/go-playground/validator.v9"
-  packages = ["."]
-  revision = "b1f51f36f1c98cc97f777d6fc9d4b05eaa0cabb5"
-  version = "v9.9.1"
 
 [[projects]]
   branch = "v2"
@@ -415,6 +835,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f133e1a8ca1640ab66356648dcd7e2bd1fa1494419ead572d56bf3071ef1e83b"
+  inputs-digest = "6e8a72844dccffe83a38457956a1826bbb386b81e9d8761ef7eba4c5af00dc5e"
   solver-name = "gps-cdcl"
   solver-version = 1

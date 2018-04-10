@@ -3,7 +3,7 @@ package evidence
 import (
 	"encoding/json"
 
-	"github.com/stratumn/sdk/cs"
+	"github.com/stratumn/go-indigocore/cs"
 )
 
 const (
@@ -23,7 +23,7 @@ func New(TransactionID string, timestamp uint64) (*cs.Evidence, error) {
 	}, nil
 }
 
-// FabricProof implements stratumn/sdk/cs/Proof
+// FabricProof implements stratumn/go-indigocore/cs/Proof
 type FabricProof struct {
 	Timestamp     uint64 `json:"timestamp"`
 	TransactionID string `json:"transaction_id"`

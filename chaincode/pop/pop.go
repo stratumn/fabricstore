@@ -24,8 +24,8 @@ import (
 
 	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
 
-	"github.com/stratumn/sdk/cs"
-	"github.com/stratumn/sdk/store"
+	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/store"
 )
 
 // Pagination functionality (limit & skip) is implemented in CouchDB but not in Hyperledger Fabric (FAB-2809 and FAB-5369).
@@ -200,8 +200,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 func (s *SmartContract) saveMap(stub shim.ChaincodeStubInterface, link *cs.Link) error {
 	mapDoc := MapDoc{
 		ObjectType: ObjectTypeMap,
-		ID:         link.GetMapID(),
-		Process:    link.GetProcess(),
+		ID:         link.Meta.MapID,
+		Process:    link.Meta.Process,
 	}
 	mapDocBytes, err := json.Marshal(mapDoc)
 	if err != nil {
@@ -220,7 +220,7 @@ func (s *SmartContract) CreateLink(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	// Check has prevLinkHash if not create map else check prevLinkHash exists
-	prevLinkHash := link.GetPrevLinkHashString()
+	prevLinkHash := link.Meta.PrevLinkHash
 	if prevLinkHash == "" {
 		if err := s.saveMap(stub, link); err != nil {
 			return shim.Error(err.Error())
