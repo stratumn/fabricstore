@@ -24,8 +24,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stratumn/fabricstore/fabricstore"
-	"github.com/stratumn/sdk/filestore"
-	"github.com/stratumn/sdk/store/storehttp"
+	"github.com/stratumn/go-indigocore/filestore"
+	"github.com/stratumn/go-indigocore/store/storehttp"
 
 	"github.com/stratumn/fabricstore/util"
 )

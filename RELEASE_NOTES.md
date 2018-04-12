@@ -2,7 +2,7 @@
 
 ### Getting started
 
-Read the documentation on the [Indigo Framework website](https://indigoframework.com/documentation).
+Read the documentation on the [Indigo Framework website](https://indigocore.org/documentation).
 
 ### What's new
 

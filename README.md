@@ -1,6 +1,6 @@
 # Stratumn Fabricstore
 
-fabricstore implements [stratumn/sdk/store.Adapter](https://github.com/stratumn/sdk/blob/master/store/store.go) interface and allows the deployment of an [Indigo](https://indigoframework.com) node using a Hyperledger Fabric back end.
+fabricstore implements [stratumn/go-indigocore/store.Adapter](https://github.com/stratumn/go-indigocore/blob/master/store/store.go) interface and allows the deployment of an [Indigo](https://indigocore.org) node using a Hyperledger Fabric back end.
 
 ### Deployment
 
@@ -31,7 +31,7 @@ If you want to start/stop the integration network outside the test you can do so
 
 ---
 
-The main goal of _fabricstore_ is to be integrated into the Indigo framework suite. To use the Indigo Fabric Store, please install `strat` from [stratumn/sdk](http://github.com/stratumn/sdk/) and generate a new project choosing the store _Indigo's Hyperledger Fabric Node_.
+The main goal of _fabricstore_ is to be integrated into the Indigo framework suite. To use the Indigo Fabric Store, please install `strat` from [stratumn/go-indigocore](http://github.com/stratumn/go-indigocore/) and generate a new project choosing the store _Indigo's Hyperledger Fabric Node_.
 
 ### License
 

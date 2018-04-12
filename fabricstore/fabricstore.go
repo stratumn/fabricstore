@@ -17,6 +17,7 @@
 package fabricstore
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 
@@ -27,10 +28,10 @@ import (
 
 	pc "github.com/stratumn/fabricstore/chaincode/pop/popconfig"
 
-	"github.com/stratumn/sdk/bufferedbatch"
-	"github.com/stratumn/sdk/cs"
-	"github.com/stratumn/sdk/store"
-	"github.com/stratumn/sdk/types"
+	"github.com/stratumn/go-indigocore/bufferedbatch"
+	"github.com/stratumn/go-indigocore/cs"
+	"github.com/stratumn/go-indigocore/store"
+	"github.com/stratumn/go-indigocore/types"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -61,7 +62,7 @@ type Config struct {
 	Commit string
 }
 
-// FabricStore is the type that implements github.com/stratumn/sdk/store.Adapter.
+// FabricStore is the type that implements github.com/stratumn/go-indigocore/store.Adapter.
 type FabricStore struct {
 	config        *Config
 	evidenceStore store.EvidenceStore
@@ -147,13 +148,13 @@ func New(e store.EvidenceStore, config *Config) (*FabricStore, error) {
 	return adapter, nil
 }
 
-// AddStoreEventChannel implements github.com/stratumn/sdk/store.Adapter.AddStoreEventChannel
+// AddStoreEventChannel implements github.com/stratumn/go-indigocore/store.Adapter.AddStoreEventChannel
 func (f *FabricStore) AddStoreEventChannel(eventChan chan *store.Event) {
 	f.eventChans = append(f.eventChans, eventChan)
 }
 
-// GetInfo implements github.com/stratumn/sdk/store.Adapter.GetInfo.
-func (f *FabricStore) GetInfo() (interface{}, error) {
+// GetInfo implements github.com/stratumn/go-indigocore/store.Adapter.GetInfo.
+func (f *FabricStore) GetInfo(ctx context.Context) (interface{}, error) {
 	return &Info{
 		Name:          Name,
 		Description:   Description,
@@ -163,8 +164,8 @@ func (f *FabricStore) GetInfo() (interface{}, error) {
 	}, nil
 }
 
-// CreateLink implements github.com/stratumn/sdk/store.LinkWriter.CreateLink.
-func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
+// CreateLink implements github.com/stratumn/go-indigocore/store.LinkWriter.CreateLink.
+func (f *FabricStore) CreateLink(ctx context.Context, link *cs.Link) (*types.Bytes32, error) {
 	linkHash, err := link.Hash()
 	if err != nil {
 		return nil, err
@@ -180,8 +181,8 @@ func (f *FabricStore) CreateLink(link *cs.Link) (*types.Bytes32, error) {
 	return linkHash, nil
 }
 
-// GetSegment implements github.com/stratumn/sdk/store.SegmentReader.GetSegment.
-func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
+// GetSegment implements github.com/stratumn/go-indigocore/store.SegmentReader.GetSegment.
+func (f *FabricStore) GetSegment(ctx context.Context, linkHash *types.Bytes32) (*cs.Segment, error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         pc.GetLink,
@@ -200,21 +201,21 @@ func (f *FabricStore) GetSegment(linkHash *types.Bytes32) (*cs.Segment, error) {
 		return nil, err
 	}
 
-	return f.buildSegment(link)
+	return f.buildSegment(ctx, link)
 }
 
-// AddEvidence implements github.com/stratumn/sdk/store.EvidenceWriter.AddEvidence.
-func (f *FabricStore) AddEvidence(linkHash *types.Bytes32, evidence *cs.Evidence) error {
-	return f.evidenceStore.AddEvidence(linkHash, evidence)
+// AddEvidence implements github.com/stratumn/go-indigocore/store.EvidenceWriter.AddEvidence.
+func (f *FabricStore) AddEvidence(ctx context.Context, linkHash *types.Bytes32, evidence *cs.Evidence) error {
+	return f.evidenceStore.AddEvidence(ctx, linkHash, evidence)
 }
 
-// GetEvidences implements github.com/stratumn/sdk/store.EvidenceReader.GetEvidences.
-func (f *FabricStore) GetEvidences(linkHash *types.Bytes32) (*cs.Evidences, error) {
-	return f.evidenceStore.GetEvidences(linkHash)
+// GetEvidences implements github.com/stratumn/go-indigocore/store.EvidenceReader.GetEvidences.
+func (f *FabricStore) GetEvidences(ctx context.Context, linkHash *types.Bytes32) (*cs.Evidences, error) {
+	return f.evidenceStore.GetEvidences(ctx, linkHash)
 }
 
-// FindSegments implements github.com/stratumn/sdk/store.SegmentReader.FindSegments.
-func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
+// FindSegments implements github.com/stratumn/go-indigocore/store.SegmentReader.FindSegments.
+func (f *FabricStore) FindSegments(ctx context.Context, filter *store.SegmentFilter) (segmentSlice cs.SegmentSlice, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
@@ -226,13 +227,14 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 		return
 	}
 	links := []cs.Link{}
+
 	err = json.Unmarshal(response, &links)
 	if err != nil {
 		return
 	}
 
 	for _, link := range links {
-		segment, _ := f.buildSegment(link)
+		segment, _ := f.buildSegment(ctx, link)
 		segmentSlice = append(segmentSlice, segment)
 	}
 
@@ -244,8 +246,8 @@ func (f *FabricStore) FindSegments(filter *store.SegmentFilter) (segmentSlice cs
 	return
 }
 
-// GetMapIDs implements github.com/stratumn/sdk/store.SegmentReader.GetMapIDs.
-func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err error) {
+// GetMapIDs implements github.com/stratumn/go-indigocore/store.SegmentReader.GetMapIDs.
+func (f *FabricStore) GetMapIDs(ctx context.Context, filter *store.MapFilter) (ids []string, err error) {
 	filterBytes, _ := json.Marshal(filter)
 
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
@@ -268,13 +270,13 @@ func (f *FabricStore) GetMapIDs(filter *store.MapFilter) (ids []string, err erro
 	return
 }
 
-// NewBatch implements github.com/stratumn/sdk/store.Adapter.NewBatch.
-func (f *FabricStore) NewBatch() (store.Batch, error) {
-	return bufferedbatch.NewBatch(f), nil
+// NewBatch implements github.com/stratumn/go-indigocore/store.Adapter.NewBatch.
+func (f *FabricStore) NewBatch(ctx context.Context) (store.Batch, error) {
+	return bufferedbatch.NewBatch(ctx, f), nil
 }
 
-// SetValue implements github.com/stratumn/sdk/store.KeyValueWriter.SetValue.
-func (f *FabricStore) SetValue(key, value []byte) error {
+// SetValue implements github.com/stratumn/go-indigocore/store.KeyValueWriter.SetValue.
+func (f *FabricStore) SetValue(ctx context.Context, key, value []byte) error {
 	_, err := f.channelClient.ExecuteTx(apitxn.ExecuteTxRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         pc.SetValue,
@@ -284,8 +286,8 @@ func (f *FabricStore) SetValue(key, value []byte) error {
 	return err
 }
 
-// GetValue implements github.com/stratumn/sdk/store.KeyValueReader.GetValue.
-func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
+// GetValue implements github.com/stratumn/go-indigocore/store.KeyValueReader.GetValue.
+func (f *FabricStore) GetValue(ctx context.Context, key []byte) (value []byte, err error) {
 	response, err := f.channelClient.Query(apitxn.QueryRequest{
 		ChaincodeID: f.config.ChaincodeID,
 		Fcn:         pc.GetValue,
@@ -298,9 +300,9 @@ func (f *FabricStore) GetValue(key []byte) (value []byte, err error) {
 	return response, nil
 }
 
-// DeleteValue implements github.com/stratumn/sdk/store.KeyValueWriter.DeleteValue.
-func (f *FabricStore) DeleteValue(key []byte) (value []byte, err error) {
-	value, err = f.GetValue(key)
+// DeleteValue implements github.com/stratumn/go-indigocore/store.KeyValueWriter.DeleteValue.
+func (f *FabricStore) DeleteValue(ctx context.Context, key []byte) (value []byte, err error) {
+	value, err = f.GetValue(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -347,13 +349,13 @@ func (f *FabricStore) onBlock(block *common.Block) {
 	}
 }
 
-func (f *FabricStore) buildSegment(link cs.Link) (*cs.Segment, error) {
+func (f *FabricStore) buildSegment(ctx context.Context, link cs.Link) (*cs.Segment, error) {
 	linkHash, err := link.Hash()
 	if err != nil {
 		return nil, err
 	}
 
-	evidences, err := f.GetEvidences(linkHash)
+	evidences, err := f.GetEvidences(ctx, linkHash)
 	if err != nil {
 		return nil, err
 	}
