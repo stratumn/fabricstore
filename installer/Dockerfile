@@ -1,4 +1,4 @@
-FROM hyperledger/fabric-tools:x86_64-1.0.3
+FROM hyperledger/fabric-tools:x86_64-1.1.0
 
 COPY vendor/github.com $GOPATH/src/github.com
 COPY . $GOPATH/src/github.com/stratumn/fabricstore
