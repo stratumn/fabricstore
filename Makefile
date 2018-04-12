@@ -12,7 +12,7 @@ GIT_TAG=v$(VERSION)
 RELEASE_NAME=$(GIT_TAG)
 RELEASE_NOTES_FILE=RELEASE_NOTES.md
 TEXT_FILES=LICENSE RELEASE_NOTES.md CHANGE_LOG.md
-DOCKER_USER?=indigoframework
+DOCKER_USER?=indigocore
 DOCKER_FILE_TEMPLATE=Dockerfile.tpl
 COVERAGE_FILE=coverage.txt
 COVERHTML_FILE=coverhtml.txt
@@ -52,7 +52,7 @@ EXECS=$(NIX_EXECS)
 SIGNATURES=$(foreach exec, $(EXECS), $(exec).sig)
 NIX_ZIP_FILES=$(foreach command, $(COMMANDS), $(foreach os-arch, $(NIX_OS_ARCHS), $(DIST_DIR)/$(os-arch)/$(command).zip))
 ZIP_FILES=$(NIX_ZIP_FILES)
-DOCKER_FILES=$(foreach command, $(COMMANDS), $(DIST_DIR)/$(command).Dockerfile)
+DOCKER_FILES=$(foreach command, $(COMMANDS), $(DIST_DIR)/$(command).Dockerfile) $(DIST_DIR)/fabricinstaller.Dockerfile
 LICENSED_FILES=$(shell find . -name '*.go' | grep -v vendor)
 
 TEST_LIST=$(foreach package, $(TEST_PACKAGES), test_$(package))
