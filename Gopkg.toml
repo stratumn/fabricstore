@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/stratumn/go-indigocore"
-  branch = "master"
+  version = "0.3.0"
 
 [[constraint]]
   name = "github.com/hyperledger/fabric"
