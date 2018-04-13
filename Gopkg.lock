@@ -617,7 +617,6 @@
   revision = "1a5009b67d6c88d46ff009712da69481d56ddbbe"
 
 [[projects]]
-  branch = "master"
   name = "github.com/stratumn/go-indigocore"
   packages = [
     "bufferedbatch",
@@ -634,7 +633,8 @@
     "testutil",
     "types"
   ]
-  revision = "69467183c5538a189d5a45419224848eb0d63b98"
+  revision = "e410b4fef462a045ac949077a374e357811aec27"
+  version = "v0.3.0"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -835,6 +835,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6e8a72844dccffe83a38457956a1826bbb386b81e9d8761ef7eba4c5af00dc5e"
+  inputs-digest = "5b0ff344438b89b9efdbb45a35cb573b4fdd942a8254be85f4f4ab9cb925bc85"
   solver-name = "gps-cdcl"
   solver-version = 1
